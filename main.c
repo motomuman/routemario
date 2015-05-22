@@ -11,7 +11,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
-
 #include <rte_common.h>
 #include <rte_log.h>
 #include <rte_memory.h>
