@@ -45,6 +45,7 @@
 #include"pktmake.h"
 #include"tool.h"
 #include"env.h"
+#include"vlb.h"
 
 #define RTE_LOGTYPE_L2FWD RTE_LOGTYPE_USER1
 
@@ -510,6 +511,9 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
           printf("M lookup ret  = %d\n", ret);
           if(ret >= 0){
+            int destport;
+            destport = forwarding_node_id(buf->hash.rss);
+
             printf("mac lookup!! MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
                 mac_table[portid][ret].addr_bytes[0],
                 mac_table[portid][ret].addr_bytes[1],
