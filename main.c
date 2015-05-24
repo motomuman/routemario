@@ -313,22 +313,16 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
 }
 
 static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
-  printf("internal core id =%d \n", rte_lcore_id());
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
     struct arp_hdr *arp;
     arp = (struct arp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
-    printf("ARP packet!!\n");
     if(rte_bswap16(arp->arp_op)== ARP_OP_REPLY){
       uint32_t newkey;
       unsigned ret;
       newkey = arp->arp_data.arp_sip;
-      //
-      printf("from arp add new key " );
       show_ip(newkey);
-      printf("\n");
-      //
       ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
       mac_table[portid][ret] = arp->arp_data.arp_sha;;
       rte_pktmbuf_free(m);
@@ -336,14 +330,14 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
     }else{
       unsigned nextport = rte_lcore_id();
       if(nextport == node_id){
-      struct ether_hdr *eth_pkt;
-      eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
-      ether_addr_copy(&eth->s_addr, &eth->d_addr);
-      ether_addr_copy(&ports_eth_addr[node_id], &eth->s_addr);
-      set_arp_header(arp, &ports_eth_addr[node_id], &eth->s_addr, port_to_ip[node_id], arp->arp_data.arp_tip, ARP_OP_REQUEST);
-      TX_enqueue(m, (uint8_t) node_id);
+        struct ether_hdr *eth_pkt;
+        eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
+        ether_addr_copy(&eth->s_addr, &eth->d_addr);
+        ether_addr_copy(&ports_eth_addr[node_id], &eth->s_addr);
+        set_arp_header(arp, &ports_eth_addr[node_id], &eth->s_addr, port_to_ip[node_id], arp->arp_data.arp_tip, ARP_OP_REQUEST);
+        TX_enqueue(m, (uint8_t) node_id);
       }else{
-      TX_enqueue(m, (uint8_t) nextport);
+        TX_enqueue(m, (uint8_t) nextport);
       }
     }
   }else{

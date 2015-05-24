@@ -83,9 +83,11 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 	ip_hdr->src_addr = rte_cpu_to_be_32(src_addr);
 	ip_hdr->dst_addr = rte_cpu_to_be_32(dst_addr);
 
-	/*
-	 * Compute IP header checksum.
-	 */
+  ip_cksum = 0;
+  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
+
+/*
+
 	ptr16 = (uint16_t *)ip_hdr;
 	ip_cksum = 0;
 	ip_cksum += ptr16[0]; ip_cksum += ptr16[1];
@@ -94,9 +96,6 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 	ip_cksum += ptr16[6]; ip_cksum += ptr16[7];
 	ip_cksum += ptr16[8]; ip_cksum += ptr16[9];
 
-	/*
-	 * Reduce 32 bit checksum to 16 bits and complement it.
-	 */
 	ip_cksum = ((ip_cksum & 0xFFFF0000) >> 16) +
 		(ip_cksum & 0x0000FFFF);
 	ip_cksum %= 65536;
@@ -104,6 +103,7 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 	if (ip_cksum == 0)
 		ip_cksum = 0xFFFF;
 	ip_hdr->hdr_checksum = (uint16_t) ip_cksum;
+  */
 }
 
 
@@ -120,13 +120,8 @@ void make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32_t myip){
           ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
           icmp_pkt = (struct icmp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
           set_eth_header(eth_pkt,  &eth_org->d_addr, &eth_org->s_addr, ETHER_TYPE_IPv4, 0);
-          //set_ipv4_header(ip_pkt, rte_bswap32(ip_org->dst_addr), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
-          set_ipv4_header(ip_pkt, rte_bswap32(myip), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
-          2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
-          printf("length should be %u\n", 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
-          printf("real len = %u\n", ip_pkt->total_length);
+          set_ipv4_header(ip_pkt, rte_bswap32(myip), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP, 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
           set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, 0, 0, 0);
-
           struct ipv4_hdr *icmp_ip_header;
           icmp_ip_header = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
           *icmp_ip_header = *ip_org;
