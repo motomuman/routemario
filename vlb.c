@@ -1,6 +1,3 @@
-/**
- * Hiroshi Tokaku <tkk@hongo.wide.ad.jp>
- **/
 
 #include <stdio.h>
 #include <stdint.h>
@@ -16,7 +13,6 @@
 #include <rte_cycles.h>
 
 #include "vlb.h"
-#include "global_mario.h"
 
 #define VLB_SIZE (1 << 20)
 #define EXPIRE_TIME (3 << 27) 
