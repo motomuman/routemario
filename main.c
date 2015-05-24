@@ -291,27 +291,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
                 mac_table[portid][ret].addr_bytes[5]);
             ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
             eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
-            int i;
-
-            uint32_t ip_cksum;
-            uint16_t *ptr16;
-            ptr16 = (uint16_t *)ip_hdr;
-            ip_cksum = 0;
-            ip_cksum += ptr16[0]; ip_cksum += ptr16[1];
-            ip_cksum += ptr16[2]; ip_cksum += ptr16[3];
-            ip_cksum += ptr16[4];
-            ip_cksum += ptr16[6]; ip_cksum += ptr16[7];
-            ip_cksum += ptr16[8]; ip_cksum += ptr16[9];
-            ip_cksum = ((ip_cksum & 0xFFFF0000) >> 16) +
-              (ip_cksum & 0x0000FFFF);
-            ip_cksum %= 65536;
-            ip_cksum = (~ip_cksum) & 0x0000FFFF;
-            if (ip_cksum == 0){
-              ip_cksum = 0xFFFF;
-            }
-            printf("before checksum = %"PRIu32, ip_hdr->hdr_checksum);
-            ip_hdr->hdr_checksum = (uint16_t)ip_cksum;
-            printf("\nafter checksum = %"PRIu32, ip_hdr->hdr_checksum);
+            ip_hdr->hdr_checksum = 0;
+            ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
             printf("\n");
             TX_enqueue(m, (uint8_t) destport);
           }else{
