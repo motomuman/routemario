@@ -225,13 +225,10 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
       int outport;
       outport = find_port_fip(ip_hdr->dst_addr);
       if(outport >= 0){
-        printf("This packet is for ME(i = %d)\n", outport);
         if(ip_hdr->next_proto_id == IP_NEXT_PROT_ICMP){
-          printf("This packet is to me ICMP\n");
           struct icmp_hdr *icmp_hdr;
           icmp_hdr = (struct icmp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
           if(icmp_hdr->icmp_type == IP_ICMP_ECHO_REQUEST){
-            printf("This packet is ICMP REQUEST\n");
             //ICMP REQUEST
             set_eth_header(eth, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
             set_icmp_header(icmp_hdr, IP_ICMP_ECHO_REPLY, icmp_hdr->icmp_code, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
@@ -250,50 +247,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
         if(ip_hdr->time_to_live == 0){
           printf("TTL 0 TIME EXCEEDED\n");
           struct rte_mbuf *pkt;
-          struct ether_hdr *eth_pkt;
-          struct ipv4_hdr *ip_pkt;
-          struct icmp_hdr *icmp_pkt;
           pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-          eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
-          ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
-          icmp_pkt = (struct icmp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
-
-          //icmp_ttl = (struct icmp_ttl_data *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-
-          set_eth_header(eth_pkt, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
-          set_ipv4_header(ip_pkt, rte_bswap32(port_to_ip[portid]), rte_bswap32(ip_hdr->src_addr), IP_NEXT_PROT_ICMP,
-          2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
-          //set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
-          set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, 0, 0, 0);
-
-          struct ipv4_hdr *icmp_ip_header;
-          //struct icmp_ttl_data *icmp_ttl;
-          uint64_t *icmp_data;
-          uint64_t *icmp_data_tmp;
-          icmp_ip_header = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-	        icmp_ip_header->version_ihl = ip_hdr->version_ihl;		
-	        icmp_ip_header->type_of_service = ip_hdr->type_of_service;
-	        icmp_ip_header->total_length = ip_hdr->total_length;		
-	        icmp_ip_header->packet_id = ip_hdr->packet_id;	
-	        icmp_ip_header->fragment_offset = ip_hdr->fragment_offset;
-	        icmp_ip_header->time_to_live = ip_hdr->time_to_live+1;		
-	        icmp_ip_header->next_proto_id = ip_hdr->next_proto_id;	
-	        icmp_ip_header->hdr_checksum = ip_hdr->hdr_checksum;		
-	        icmp_ip_header->src_addr = ip_hdr->src_addr;		
-	        icmp_ip_header->dst_addr = ip_hdr->dst_addr;		
-
-          icmp_data_tmp = (uint64_t *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
-          printf("icmp_data= %"PRIu64, *icmp_data_tmp);
-          icmp_data = (uint64_t *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ 2*sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-          *icmp_data = *icmp_data_tmp;
-          printf("icmp_data= %"PRIu64, *icmp_data);
-          printf("\n");
-          (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
-          (pkt)->data_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
-          uint16_t tlen;
-          tlen  = pkt->pkt_len - (sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr));
-          icmp_pkt->icmp_cksum     = cksum(icmp_pkt, tlen, 0);
-
+          make_ttl_expkt(m, pkt);
 
 
           TX_enqueue(pkt, (uint8_t) portid);
