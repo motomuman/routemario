@@ -1025,13 +1025,15 @@ int main(int argc, char **argv){
   for(mac = 0; mac < nb_ports; mac++){
     struct rte_eth_flex_filter filter;
     filter.len = 8;
-    filter.bytes[0] = (uint8_t)(0xf) + (mac<<4);
+    filter.bytes[0] = (uint8_t)(0xf) + ((mac)<<4);
     for(i = 1; i <8; i++){
     filter.bytes[i] = 0;
     }
     filter.mask[0] = (uint8_t)0b10000000;
     filter.priority = 1;
-    filter.queue = mac;
+    filter.queue = 3;
+    //
+    //filter.queue = mac;
     for(port = 0; port < nb_ports; port++){
       if(port == node_id){
         continue;
@@ -1041,9 +1043,9 @@ int main(int argc, char **argv){
           RTE_ETH_FILTER_FLEXIBLE,
           RTE_ETH_FILTER_ADD,
           &filter);
+    
     }
   }
-
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(router_launch_one_lcore, NULL, CALL_MASTER);
