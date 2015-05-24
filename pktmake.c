@@ -136,7 +136,7 @@ struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32
 	        icmp_ip_header->time_to_live = ip_org->time_to_live+1;		
 	        icmp_ip_header->next_proto_id = ip_org->next_proto_id;	
 	        icmp_ip_header->hdr_checksum = ip_org->hdr_checksum;		
-	        icmp_ip_header->src_addr = ip_org->src_addr;		
+	        icmp_ip_header->src_addr = myip;		
 	        icmp_ip_header->dst_addr = ip_org->dst_addr;		
 
           uint64_t *icmp_data;
