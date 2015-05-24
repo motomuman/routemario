@@ -75,7 +75,6 @@ static struct ether_addr l2fwd_ports_eth_addr[RTE_MAX_ETHPORTS];
 static unsigned int l2fwd_rx_queue_per_lcore = 1;
 
 uint8_t nb_lcores;
-uint8_t node_id;
 
 int find_port_fip(uint32_t ip){
   int i;
