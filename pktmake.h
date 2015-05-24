@@ -40,7 +40,6 @@ struct icmp_unreachable {
 
 void set_eth_header(struct ether_hdr *eth_hdr, struct ether_addr *src_mac, struct ether_addr *dst_mac, uint16_t ether_type, unsigned broadcast);
 void set_arp_header(struct arp_hdr *arp_hdr, struct ether_addr *src_mac, struct ether_addr *dst_mac, uint32_t src_ip, uint32_t dst_ip, uint32_t opcode);
-void set_icmp_header(struct icmp_hdr *icmp_hdr, uint8_t icmp_type, uint8_t icmp_code, 
-uint16_t icmp_cksum, uint16_t icmp_ident, uint16_t icmp_seq_nb);
+void set_icmp_header(struct icmp_hdr *icmp_hdr, uint8_t icmp_type, uint8_t icmp_code,  uint16_t icmp_ident, uint16_t icmp_seq_nb);
 void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_addr, uint16_t next_proto_id, uint16_t pkt_len);
 #endif

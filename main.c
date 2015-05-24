@@ -225,7 +225,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           if(icmp_hdr->icmp_type == IP_ICMP_ECHO_REQUEST){
             //ICMP REQUEST
             set_eth_header(eth, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
-            set_icmp_header(icmp_hdr, IP_ICMP_ECHO_REPLY, icmp_hdr->icmp_code, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
+            set_icmp_header(icmp_hdr, IP_ICMP_ECHO_REPLY, icmp_hdr->icmp_code, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
             uint32_t tmp = ip_hdr->dst_addr;
             ip_hdr->dst_addr = ip_hdr->src_addr;
             ip_hdr->src_addr = tmp;
@@ -240,17 +240,10 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
         ip_hdr->time_to_live--;
         if(ip_hdr->time_to_live == 0){
           printf("TTL 0 TIME EXCEEDED\n");
-          /*
           struct rte_mbuf *pkt;
           pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
           make_ttl_expkt(m, pkt, port_to_ip[portid]);
           TX_enqueue(pkt, (uint8_t) portid);
-          */
-            struct rte_mbuf *pkt;
-            pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-            make_unreach_pkt(m, pkt, port_to_ip[portid]);
-            TX_enqueue(pkt, (uint8_t) portid);
-            printf("UNreachable!!!!\n");
         }else{
           //not to me
           struct next_set next_set =  lookup(rte_bswap32(ip_hdr->dst_addr));
@@ -261,55 +254,43 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             TX_enqueue(pkt, (uint8_t) portid);
             printf("UNreachable!!!!\n");
           }else{
-          printf("dest ip is ");
-          show_ip(ip_hdr->dst_addr);
-          printf("= %"PRIu32, ip_hdr->dst_addr);
-          printf("nexthop is ");
-          show_ip(next_set.nexthop);
-          printf("nextport is %d\n",next_set.nextport);
-          printf("I will find key ");
-          show_ip(next_set.nexthop);
-          printf("\n");
-          ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
-          printf("M lookup ret  = %d\n", ret);
-          if(ret >= 0){
-            int destport;
-            destport = forwarding_node_id(m->hash.rss);
-            printf("!!!!!!!!!!!!!!destport!!!!!!!!!!!!!!!!!! = %d\n", destport);
-            ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
-            eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
-            ip_hdr->hdr_checksum = 0;
-            ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
-            printf("\n");
-            TX_enqueue(m, (uint8_t) destport);
-          }else{
-            struct rte_mbuf *pkt;
-            struct ether_hdr *eth_pkt;
-            struct arp_hdr *arp_pkt;
-            pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-            eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
-            struct ether_addr * dummy;
-            set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
-            arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
-            set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
-            eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
-            int i;
-            eth_pkt->s_addr.addr_bytes[i] =0xff;
-            for(i = 1; i <6; i++){
-              eth_pkt->d_addr.addr_bytes[i] =0;
-              eth_pkt->s_addr.addr_bytes[i] =0xff;
+            show_ip(ip_hdr->dst_addr);
+            show_ip(next_set.nexthop);
+            show_ip(next_set.nexthop);
+            ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
+            if(ret >= 0){
+              int destport;
+              destport = forwarding_node_id(m->hash.rss);
+              ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
+              eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
+              ip_hdr->hdr_checksum = 0;
+              ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
+              printf("\n");
+              TX_enqueue(m, (uint8_t) destport);
+            }else{
+              struct rte_mbuf *pkt;
+              struct ether_hdr *eth_pkt;
+              struct arp_hdr *arp_pkt;
+              pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
+              eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
+              struct ether_addr * dummy;
+              set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
+              arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
+              set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
+              eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
+              int i;
+              memset(&eth_pkt->s_addr, 0xff, 6);
+              memset(&eth_pkt->d_addr.addr_bytes[1], 0xff, 5);
+              (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
+              (pkt)->data_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
+              TX_enqueue(pkt, (uint8_t) next_set.nextport);
+              rte_pktmbuf_free(m);
             }
-            printf("arp generate!!\n");
-            (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
-            (pkt)->data_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
-            TX_enqueue(pkt, (uint8_t) next_set.nextport);
-            rte_pktmbuf_free(m);
           }
-        }
-        }
         }
       }
     }
+  }
 }
 
 static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
