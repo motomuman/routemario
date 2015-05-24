@@ -581,7 +581,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
 }
 
 static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
-  printf("internal port id =%d \n", portid);
+  printf("internal core id =%d \n", rte_core_id());
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
