@@ -521,7 +521,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
                 mac_table[portid][ret].addr_bytes[4],
                 mac_table[portid][ret].addr_bytes[5]);
             ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
-            eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
+            eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (destport<<4);
             int i;
 
             uint32_t ip_cksum;
