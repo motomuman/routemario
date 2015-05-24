@@ -51,7 +51,6 @@
 #define MBUF_SIZE (2048 + sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM)
 #define NB_MBUF   8192
 
-#define MAX_PKT_BURST 32
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
 /*
  * Configurable number of RX/TX ring descriptors
@@ -77,43 +76,7 @@ int find_port_fip(uint32_t ip){
 }
 
 
-/*message buffer*/
-struct mbuf_table {
-	unsigned len;
-	struct rte_mbuf *m_table[MAX_PKT_BURST];
-};
 
-#define MAX_RX_QUEUE_PER_LCORE 16
-#define MAX_TX_QUEUE_PER_PORT 16
-struct lcore_queue_conf {
-	unsigned n_rx_port;
-	unsigned rx_port_list[MAX_RX_QUEUE_PER_LCORE];
-	struct mbuf_table tx_mbufs[RTE_MAX_ETHPORTS];
-
-} __rte_cache_aligned;
-struct lcore_queue_conf lcore_queue_conf[RTE_MAX_LCORE];
-
-static const struct rte_eth_conf prt_conf = {
-	.rxmode = {
-    .mq_mode = ETH_MQ_RX_RSS,
-    .max_rx_pkt_len = ETHER_MAX_LEN,
-		.split_hdr_size = 0,
-		.header_split   = 0, /**< Header Split disabled */
-		.hw_ip_checksum = 0, /**< IP checksum offload disabled */
-    .hw_vlan_filter = 0, /**< VLAN filtering disabled */
-    .jumbo_frame    = 0, /**< Jumbo Frame Support disabled */
-    .hw_strip_crc   = 0, /**< CRC stripped by hardware */
-  },
-  .rx_adv_conf = {
-    .rss_conf = {
-      .rss_key=NULL,
-      .rss_hf = ETH_RSS_IP,
-    },
-  },
-	.txmode = {
-		.mq_mode = ETH_MQ_TX_NONE,
-	},
-};
 
 #define MAX_NB_CORE 128
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
