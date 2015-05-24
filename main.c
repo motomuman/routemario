@@ -247,7 +247,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           printf("TTL 0 TIME EXCEEDED\n");
           struct rte_mbuf *pkt;
           pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-          make_ttl_expkt(m, pkt, ip_hdr->src_addr);
+          make_ttl_expkt(m, pkt, port_to_ip[portid]);
 
 
           TX_enqueue(pkt, (uint8_t) portid);
