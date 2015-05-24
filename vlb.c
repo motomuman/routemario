@@ -13,6 +13,7 @@
 #include <rte_cycles.h>
 
 #include "vlb.h"
+#include "env.h"
 
 #define VLB_SIZE (1 << 20)
 #define EXPIRE_TIME (3 << 27) 
@@ -26,7 +27,7 @@ static struct vlb_info vlb_tb[VLB_SIZE];
 static uint8_t
 next_node_id() {
   round_robbin = (++round_robbin) & (NODE_SIZE - 1); 
-  if(round_robbin == _mid) 
+  if(round_robbin == node_id) 
     round_robbin = (++round_robbin) & (NODE_SIZE - 1); 
   return round_robbin; 
 }
