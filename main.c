@@ -219,27 +219,12 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
     if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
       arp_handle_external(m, portid, eth);
     }else{
-      printf("PACKET IS IP\n");
-      /*
-      uint32_t newkey;
-      newkey = ip_hdr->src_addr;
-      ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
-      mac_table[portid][ret] = eth->s_addr;                             //200
-      show_ip(newkey);
-      */
-
       struct ipv4_hdr *ip_hdr;
       ip_hdr = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
       int ret;
-      printf("portid = %d\n", portid);
-      printf("debug1\n");
       int outport;
-      for(outport = 0; outport <nb_ports; outport++){
-        if(ip_hdr->dst_addr==port_to_ip[outport]){
-          break;
-        }
-      }
-      if(outport != nb_ports){
+      outport = find_port_fip(ip_hdr->dst_addr);
+      if(outport >= 0){
         printf("This packet is for ME(i = %d)\n", outport);
         if(ip_hdr->next_proto_id == IP_NEXT_PROT_ICMP){
           printf("This packet is to me ICMP\n");
