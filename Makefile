@@ -11,7 +11,7 @@ include $(RTE_SDK)/mk/rte.vars.mk
 APP = routemario
 
 # all source are stored in SRCS-y
-SRCS-y := setups.c vlb.c tool.c arp_table.c radix_tree.c pktmake.c main.c
+SRCS-y := setups.c vlb.c tool.c  radix_tree.c pktmake.c main.c
 
 CFLAGS += -O3
 #CFLAGS += $(WERROR_FLAGS)

@@ -30,6 +30,7 @@ struct lcore_queue_conf {
 
 } __rte_cache_aligned;
 struct lcore_queue_conf lcore_queue_conf[RTE_MAX_LCORE];
+uint32_t  port_to_ip[RTE_MAX_ETHPORTS];
 
 
 static const struct rte_eth_conf prt_conf = {

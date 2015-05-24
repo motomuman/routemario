@@ -23,10 +23,6 @@
 #define IP_NEXT_PROT_ICMP 1
 
 
-struct icmp_ttl_data {
-	struct ipv4_hdr icmp_ipv4; /* ICMP packet sequence number. */
-	uint8_t icmp_data_8b; /* ICMP packet sequence number. */
-} __attribute__((__packed__));
 
 struct icmp_unreachable {
 	uint8_t  icmp_type;   /* ICMP packet type. */

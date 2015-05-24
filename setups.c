@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <getopt.h>
 #include"env.h"
+#include"arp_table.h"
+#include"radix_tree.h"
+
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 
@@ -117,4 +120,55 @@ static int l2fwd_parse_timer_period(const char *q_arg) {
 	ret = optind-1;
 	optind = 0; /* reset getopt lib */
 	return ret;
+}
+
+
+
+void setup_hash(uint8_t port_num) {
+  int i;
+  for(i = 0; i < port_num; i++){
+    char s[10];
+    sprintf(s, "%d", i);
+    struct rte_hash_parameters mac_table_hash_param = {
+        .name = s,
+        .entries = MAC_TABLE_ENTRIES,
+        .bucket_entries = 4,
+        .key_len = sizeof(uint32_t),
+        .hash_func = rte_hash_crc,
+        .hash_func_init_val = 0,
+    };
+    mac_table_hash[i] =  rte_hash_create(&mac_table_hash_param);
+    if (mac_table_hash[i]== NULL)
+      rte_exit(EXIT_FAILURE, "Unable to create the l3fwd hash on \n");
+  }
+}
+
+void setup_radix_tree(){
+  root = (struct radix_node *)(malloc(sizeof(struct radix_node)));
+  root->node0 = NULL;
+  root->node1 = NULL;
+  root->done = 0;
+  proot = (struct pradix_node *)(malloc(sizeof(struct pradix_node)));
+  proot->pnode0 = NULL;
+  proot->pnode1 = NULL;
+  proot->done = 0;
+  FILE *fp;
+  char s[100];
+  fp = fopen("config/interfaces", "r" );
+  if( fp == NULL ){
+    printf( "can't open interface/n");
+  }
+  while( fgets( s, 100, fp ) != NULL ){
+    setup_port_lookup_table(s);
+    printf( "%s", s );
+  }
+  fclose( fp );
+  fp = fopen("config/route", "r" );
+  if( fp == NULL ){
+    printf( "can't open route/n");
+  }
+  while( fgets( s, 100, fp ) != NULL ){
+    setup_lookup_table(s);
+  }
+  fclose( fp );
 }

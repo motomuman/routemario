@@ -33,15 +33,8 @@ struct next_set{
 };
 
 
-uint32_t  port_to_ip[RTE_MAX_ETHPORTS];
 struct radix_node *root;
 struct pradix_node *proot;
 
-
-
 struct next_set lookup(uint32_t dst_ip);
-unsigned port_lookup(uint32_t dst_ip);
-void insert(uint32_t ip, uint32_t mask, uint32_t next, unsigned port, unsigned link_local);
-void pinsert(uint32_t ip, uint32_t mask, unsigned port);
-void setup_radix_tree();
 #endif

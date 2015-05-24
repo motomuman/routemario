@@ -1,6 +1,7 @@
 #include <rte_ip.h>
 #include"radix_tree.h"
 #include"tool.h"
+#include"env.h"
 
 struct next_set lookup(uint32_t dst_ip){
   int i;
@@ -82,15 +83,12 @@ unsigned port_lookup(uint32_t dst_ip){
 }
 
 void insert(uint32_t ip, uint32_t mask, uint32_t nexthop, unsigned nextport, unsigned link_local){
-  printf("debug13.5\n");
   nexthop = rte_bswap32(nexthop);
-  printf("Insert!!!!!\n");
   show_ip(ip);
   show_ip(mask);
   int i;
   struct radix_node *now = root;
   for(i = 31; i >= 0; i--){
-    printf("i = %d\n", i);
     if(!((mask>>i)&1)){
       now->nexthop = nexthop;
       now->nextport = nextport;
@@ -193,33 +191,3 @@ void setup_lookup_table(char s[100]){
   insert(ips_to_normal_order(ips1), ips_to_normal_order(ips2), ips_to_normal_order(ips3) , port, 0); 
 }
 
-
-void setup_radix_tree(){
-  root = (struct radix_node *)(malloc(sizeof(struct radix_node)));
-  root->node0 = NULL;
-  root->node1 = NULL;
-  root->done = 0;
-  proot = (struct pradix_node *)(malloc(sizeof(struct pradix_node)));
-  proot->pnode0 = NULL;
-  proot->pnode1 = NULL;
-  proot->done = 0;
-  FILE *fp;
-  char s[100];
-  fp = fopen("config/interfaces", "r" );
-  if( fp == NULL ){
-    printf( "can't open interface/n");
-  }
-  while( fgets( s, 100, fp ) != NULL ){
-    setup_port_lookup_table(s);
-    printf( "%s", s );
-  }
-  fclose( fp );
-  fp = fopen("config/route", "r" );
-  if( fp == NULL ){
-    printf( "can't open route/n");
-  }
-  while( fgets( s, 100, fp ) != NULL ){
-    setup_lookup_table(s);
-  }
-  fclose( fp );
-}

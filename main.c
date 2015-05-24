@@ -63,16 +63,6 @@ static uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
 uint8_t nb_lcores;
 
-int find_port_fip(uint32_t ip){
-  int i;
-    for(i = 0; i <nb_ports; i++){
-      if(ip==port_to_ip[i]){
-        return i;
-      }
-    }
-    return -1;
-}
-
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
 
@@ -429,8 +419,6 @@ static int router_launch_one_lcore(__attribute__((unused)) void *dummy){
 	router_main_loop();
 	return 0;
 }
-
-
 
 /* Check the link status of all ports in up to 9s, and print them finally */
 static void

@@ -66,25 +66,6 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 
   ip_hdr->hdr_checksum = 0;
   ip_hdr->hdr_checksum = cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
-
-/*
-
-	ptr16 = (uint16_t *)ip_hdr;
-	ip_cksum = 0;
-	ip_cksum += ptr16[0]; ip_cksum += ptr16[1];
-	ip_cksum += ptr16[2]; ip_cksum += ptr16[3];
-	ip_cksum += ptr16[4];
-	ip_cksum += ptr16[6]; ip_cksum += ptr16[7];
-	ip_cksum += ptr16[8]; ip_cksum += ptr16[9];
-
-	ip_cksum = ((ip_cksum & 0xFFFF0000) >> 16) +
-		(ip_cksum & 0x0000FFFF);
-	ip_cksum %= 65536;
-	ip_cksum = (~ip_cksum) & 0x0000FFFF;
-	if (ip_cksum == 0)
-		ip_cksum = 0xFFFF;
-	ip_hdr->hdr_checksum = (uint16_t) ip_cksum;
-  */
 }
 
 

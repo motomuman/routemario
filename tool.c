@@ -1,4 +1,5 @@
 #include"tool.h"
+#include"env.h"
 
 
 void show_ip(uint32_t ip){
@@ -59,9 +60,6 @@ uint32_t cksumUpdate( void * pBuf, int32_t size, uint32_t cksum )
 }
 
 
-
-
-
 uint16_t cksumDone( uint32_t cksum )
 {
     /* Fold at most twice */
@@ -75,3 +73,14 @@ uint16_t cksum( void * pBuf, int32_t size, uint32_t cksum )
 {
     return cksumDone( cksumUpdate( pBuf, size, cksum) );
 }
+
+int find_port_fip(uint32_t ip){
+  int i;
+    for(i = 0; i <nb_ports; i++){
+      if(ip==port_to_ip[i]){
+        return i;
+      }
+    }
+    return -1;
+}
+
