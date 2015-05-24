@@ -1,5 +1,6 @@
 
 #include"pktmake.h"
+#include"env.h"
 
 void set_eth_header(struct ether_hdr *eth_hdr, struct ether_addr *src_mac, struct ether_addr *dst_mac, uint16_t ether_type, unsigned broadcast) {
   if(broadcast){
@@ -106,7 +107,7 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 }
 
 
-struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt){
+struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32_t myip){
           struct ether_hdr *eth_org;
           struct ipv4_hdr *ip_org;
           eth_org = rte_pktmbuf_mtod(m, struct ether_hdr *);
@@ -119,7 +120,8 @@ struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt){
           ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
           icmp_pkt = (struct icmp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
           set_eth_header(eth_pkt,  &eth_org->d_addr, &eth_org->s_addr, ETHER_TYPE_IPv4, 0);
-          set_ipv4_header(ip_pkt, rte_bswap32(ip_org->dst_addr), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
+          //set_ipv4_header(ip_pkt, rte_bswap32(ip_org->dst_addr), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
+          set_ipv4_header(ip_pkt, rte_bswap32(myip), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
           2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
           set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, 0, 0, 0);
 

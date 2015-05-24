@@ -9,6 +9,8 @@
 #define MAX_TX_QUEUE_PER_PORT 16
 
 
+static struct ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];
+
 uint8_t nb_ports;
 uint8_t node_id;
 

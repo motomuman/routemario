@@ -61,7 +61,6 @@ static uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 static uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
 /* ethernet addresses of ports */
-static struct ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];
 
 uint8_t nb_lcores;
 
@@ -248,7 +247,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           printf("TTL 0 TIME EXCEEDED\n");
           struct rte_mbuf *pkt;
           pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-          make_ttl_expkt(m, pkt);
+          make_ttl_expkt(m, pkt, ip_hdr->src_addr);
 
 
           TX_enqueue(pkt, (uint8_t) portid);
