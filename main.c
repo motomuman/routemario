@@ -521,7 +521,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
                 mac_table[portid][ret].addr_bytes[4],
                 mac_table[portid][ret].addr_bytes[5]);
             ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
-            eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (destport<<4);
+            eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
             int i;
 
             uint32_t ip_cksum;
@@ -544,7 +544,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             ip_hdr->hdr_checksum = (uint16_t)ip_cksum;
             printf("\nafter checksum = %"PRIu32, ip_hdr->hdr_checksum);
             printf("\n");
-            TX_enqueue(m, (uint8_t) next_set.nextport);
+            TX_enqueue(m, (uint8_t) destport);
           }else{
             printf("debughoge0\n");
             struct rte_mbuf *pkt;
@@ -603,20 +603,28 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
       return;
     }else{
       unsigned nextport = rte_lcore_id();
+      if(nextport == node_id){
       struct ether_hdr *eth_pkt;
       eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
       ether_addr_copy(&eth->s_addr, &eth->d_addr);
       ether_addr_copy(&l2fwd_ports_eth_addr[node_id], &eth->s_addr);
       set_arp_header(arp, &l2fwd_ports_eth_addr[node_id], &eth->s_addr, port_to_ip[node_id], arp->arp_data.arp_tip, ARP_OP_REQUEST);
       TX_enqueue(m, (uint8_t) node_id);
+      }else{
+      TX_enqueue(m, (uint8_t) nextport);
+      }
     }
   }else{
     unsigned nextport = rte_lcore_id();
+      if(nextport == node_id){
     struct ether_hdr *eth_pkt;
     eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
     ether_addr_copy(&eth->s_addr, &eth->d_addr);
     ether_addr_copy(&l2fwd_ports_eth_addr[node_id], &eth->s_addr);
     TX_enqueue(m, (uint8_t) node_id);
+      }else{
+      TX_enqueue(m, (uint8_t) nextport);
+      }
   }
 }
 
@@ -1034,9 +1042,7 @@ int main(int argc, char **argv){
     }
     filter.mask[0] = (uint8_t)0b10000000;
     filter.priority = 1;
-    filter.queue = 3;
-    //
-    //filter.queue = mac;
+    filter.queue = mac;
     for(port = 0; port < nb_ports; port++){
       if(port == node_id){
         continue;
