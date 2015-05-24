@@ -85,48 +85,6 @@ static int64_t timer_period = 10 * TIMER_MILLISECOND * 1000; /* default period i
 
 
 
-uint32_t cksumUpdate( void * pBuf, int32_t size, uint32_t cksum )
-{
-    uint32_t       nWords;
-    uint16_t     * pWd = (uint16_t *)pBuf;
-    
-    for( nWords = (size >> 5); nWords > 0; nWords-- )
-    {
-        cksum += *pWd++; cksum += *pWd++; cksum += *pWd++; cksum += *pWd++;
-        cksum += *pWd++; cksum += *pWd++; cksum += *pWd++; cksum += *pWd++;
-        cksum += *pWd++; cksum += *pWd++; cksum += *pWd++; cksum += *pWd++;
-        cksum += *pWd++; cksum += *pWd++; cksum += *pWd++; cksum += *pWd++;
-    }
-    
-    /* handle the odd number size */
-    for(nWords = (size & 0x1f) >> 1; nWords > 0; nWords-- )
-        cksum   += *pWd++;
-        
-    /* Handle the odd byte length */
-    if (size & 1)
-        cksum   += *pWd & htons(0xFF00);
-        
-    return cksum;
-}
-
-
-
-
-
-uint16_t cksumDone( uint32_t cksum )
-{
-    /* Fold at most twice */
-    cksum = (cksum & 0xFFFF) + (cksum >> 16);
-    cksum = (cksum & 0xFFFF) + (cksum >> 16);
-    
-    return ~((uint16_t)cksum);
-}
-
-uint16_t cksum( void * pBuf, int32_t size, uint32_t cksum )
-{
-    return cksumDone( cksumUpdate( pBuf, size, cksum) );
-}
-
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
