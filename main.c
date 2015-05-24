@@ -53,9 +53,6 @@
 
 #define MAX_PKT_BURST 32
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
-
-//#define 32BIT_MASK        0xffffffff
-
 /*
  * Configurable number of RX/TX ring descriptors
  */
@@ -65,14 +62,7 @@ static uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 static uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
 /* ethernet addresses of ports */
-static struct ether_addr l2fwd_ports_eth_addr[RTE_MAX_ETHPORTS];
-
-
-
-/* list of enabled ports */
-//static uint32_t l2fwd_dst_ports[RTE_MAX_ETHPORTS];
-
-static unsigned int l2fwd_rx_queue_per_lcore = 1;
+static struct ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];
 
 uint8_t nb_lcores;
 
@@ -227,9 +217,6 @@ static void print_stats(void) {
 }
 
 
-
-
-
 /* Send the burst of packets on an output interface */
 static int l2fwd_send_burst(struct lcore_queue_conf *qconf, unsigned n, uint8_t port, unsigned lcore_id) {
 	struct rte_mbuf **m_table;
@@ -273,7 +260,6 @@ static int TX_enqueue(struct rte_mbuf *m, uint8_t port) {
 static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ether_hdr *eth){
   struct arp_hdr *arp;
   arp = (struct arp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
-  printf("ARP packet!!\n");
   if(rte_bswap16(arp->arp_op)== ARP_OP_REPLY){
     uint32_t newkey;
     unsigned ret;
@@ -298,14 +284,11 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
   }else if(rte_bswap16(arp->arp_op) == ARP_OP_REQUEST){
     int ret = find_port_fip(arp->arp_data.arp_tip);
     if(ret >= 0){
-      printf("To me arp REQUEST(i = %d)!!\n", ret);
       struct arp_hdr *arp_pkt;
       arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) 
       + sizeof(struct ether_hdr));
-      set_eth_header(eth, &l2fwd_ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_ARP, 0);
-      set_arp_header(arp_pkt, &l2fwd_ports_eth_addr[portid], &eth->d_addr, port_to_ip[ret], arp->arp_data.arp_sip, ARP_OP_REPLY);
-      printf("i = %d\n", ret );
-      printf("IPIP \n");
+      set_eth_header(eth, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_ARP, 0);
+      set_arp_header(arp_pkt, &ports_eth_addr[portid], &eth->d_addr, port_to_ip[ret], arp->arp_data.arp_sip, ARP_OP_REPLY);
       show_ip(port_to_ip[ret]);
       TX_enqueue(m, (uint8_t) portid);
     }else{
@@ -319,24 +302,11 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
   }
 }
 
-static uint8_t is_broadcast(struct ether_addr ad){
-  return ad.addr_bytes[0] == 0xff && ad.addr_bytes[1] == 0xff && ad.addr_bytes[2] == 0xff &&
-    ad.addr_bytes[3] == 0xff && ad.addr_bytes[4] == 0xff && ad.addr_bytes[5] == 0xff;
-}
-static uint8_t is_same_addr(struct ether_addr ad1, struct ether_addr ad2){
-  return ad1.addr_bytes[0] == ad2.addr_bytes[0] && 
-         ad1.addr_bytes[1] == ad2.addr_bytes[1] && 
-         ad1.addr_bytes[2] == ad2.addr_bytes[2] && 
-         ad1.addr_bytes[3] == ad2.addr_bytes[3] && 
-         ad1.addr_bytes[4] == ad2.addr_bytes[4] && 
-         ad1.addr_bytes[5] == ad2.addr_bytes[5];
-}
-
 static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
   printf("external\n");
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
-  if(is_same_addr(eth->d_addr, l2fwd_ports_eth_addr[portid] ) == 0 && is_broadcast(eth->d_addr) == 0){
+  if(is_same_addr(eth->d_addr, ports_eth_addr[portid] ) == 0 && is_broadcast(eth->d_addr) == 0){
     printf("not to my eth so dwomp\n");
     rte_pktmbuf_free(m);
   }else{
@@ -371,7 +341,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           if(icmp_hdr->icmp_type == IP_ICMP_ECHO_REQUEST){
             printf("This packet is ICMP REQUEST\n");
             //ICMP REQUEST
-            set_eth_header(eth, &l2fwd_ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
+            set_eth_header(eth, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
             set_icmp_header(icmp_hdr, IP_ICMP_ECHO_REPLY, icmp_hdr->icmp_code, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
             uint32_t tmp = ip_hdr->dst_addr;
             ip_hdr->dst_addr = ip_hdr->src_addr;
@@ -398,7 +368,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
 
           //icmp_ttl = (struct icmp_ttl_data *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
 
-          set_eth_header(eth_pkt, &l2fwd_ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
+          set_eth_header(eth_pkt, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
           set_ipv4_header(ip_pkt, rte_bswap32(port_to_ip[portid]), rte_bswap32(ip_hdr->src_addr), IP_NEXT_PROT_ICMP,
           2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
           //set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
@@ -449,7 +419,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
           icmp_pkt = (struct icmp_unreachable *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
 
-          set_eth_header(eth_pkt, &l2fwd_ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
+          set_eth_header(eth_pkt, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
           set_ipv4_header(ip_pkt, rte_bswap32(port_to_ip[portid]), rte_bswap32(ip_hdr->src_addr), IP_NEXT_PROT_ICMP,
           2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
           //set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
@@ -553,10 +523,10 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
             eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
             struct ether_addr * dummy;
-            set_eth_header(eth_pkt, &l2fwd_ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
+            set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
             arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
 
-            set_arp_header(arp_pkt, &l2fwd_ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
+            set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
             eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
             int i;
             for(i = 1; i <6; i++){
@@ -607,8 +577,8 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
       struct ether_hdr *eth_pkt;
       eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
       ether_addr_copy(&eth->s_addr, &eth->d_addr);
-      ether_addr_copy(&l2fwd_ports_eth_addr[node_id], &eth->s_addr);
-      set_arp_header(arp, &l2fwd_ports_eth_addr[node_id], &eth->s_addr, port_to_ip[node_id], arp->arp_data.arp_tip, ARP_OP_REQUEST);
+      ether_addr_copy(&ports_eth_addr[node_id], &eth->s_addr);
+      set_arp_header(arp, &ports_eth_addr[node_id], &eth->s_addr, port_to_ip[node_id], arp->arp_data.arp_tip, ARP_OP_REQUEST);
       TX_enqueue(m, (uint8_t) node_id);
       }else{
       TX_enqueue(m, (uint8_t) nextport);
@@ -616,15 +586,15 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
     }
   }else{
     unsigned nextport = rte_lcore_id();
-      if(nextport == node_id){
-    struct ether_hdr *eth_pkt;
-    eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
-    ether_addr_copy(&eth->s_addr, &eth->d_addr);
-    ether_addr_copy(&l2fwd_ports_eth_addr[node_id], &eth->s_addr);
-    TX_enqueue(m, (uint8_t) node_id);
-      }else{
+    if(nextport == node_id){
+      struct ether_hdr *eth_pkt;
+      eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
+      ether_addr_copy(&eth->s_addr, &eth->d_addr);
+      ether_addr_copy(&ports_eth_addr[node_id], &eth->s_addr);
+      TX_enqueue(m, (uint8_t) node_id);
+    }else{
       TX_enqueue(m, (uint8_t) nextport);
-      }
+    }
   }
 }
 
@@ -792,7 +762,7 @@ static int l2fwd_parse_args(int argc, char **argv) {
 
 	argvopt = argv;
 
-	while ((opt = getopt_long(argc, argvopt, "p:q:T:w:",
+	while ((opt = getopt_long(argc, argvopt, "p:T:w:",
 				  lgopts, &option_index)) != EOF) {
 
 		switch (opt) {
@@ -810,14 +780,6 @@ static int l2fwd_parse_args(int argc, char **argv) {
 
 
 		/* nqueue */
-		case 'q':
-			l2fwd_rx_queue_per_lcore = l2fwd_parse_nqueue(optarg);
-			if (l2fwd_rx_queue_per_lcore == 0) {
-				printf("invalid queue number\n");
-				l2fwd_usage(prgname);
-				return -1;
-			}
-			break;
 
 		/* timer period */
 		case 'T':
@@ -955,7 +917,6 @@ int main(int argc, char **argv){
 
 	/* Initialize the port/queue configuration of each logical core */
 
-  l2fwd_rx_queue_per_lcore = nb_lcores;
   for(rx_lcore_id = 0; rx_lcore_id <nb_lcores; rx_lcore_id++){
     for (portid = 0; portid < nb_ports; portid++) {
       if (qconf != &lcore_queue_conf[rx_lcore_id]){
@@ -979,8 +940,8 @@ int main(int argc, char **argv){
 			rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
 				  ret, (unsigned) portid);
 
-		//mac addr of portid -> l2fwd_ports_eth_addr[portid]
-    rte_eth_macaddr_get(portid,&l2fwd_ports_eth_addr[portid]);
+		//mac addr of portid -> ports_eth_addr[portid]
+    rte_eth_macaddr_get(portid,&ports_eth_addr[portid]);
 
 		/* init one RX queue */
     fflush(stdout);
@@ -1014,12 +975,12 @@ int main(int argc, char **argv){
 
 		printf("Port %u, MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
 				(unsigned) portid,
-				l2fwd_ports_eth_addr[portid].addr_bytes[0],
-				l2fwd_ports_eth_addr[portid].addr_bytes[1],
-				l2fwd_ports_eth_addr[portid].addr_bytes[2],
-				l2fwd_ports_eth_addr[portid].addr_bytes[3],
-				l2fwd_ports_eth_addr[portid].addr_bytes[4],
-				l2fwd_ports_eth_addr[portid].addr_bytes[5]);
+				ports_eth_addr[portid].addr_bytes[0],
+				ports_eth_addr[portid].addr_bytes[1],
+				ports_eth_addr[portid].addr_bytes[2],
+				ports_eth_addr[portid].addr_bytes[3],
+				ports_eth_addr[portid].addr_bytes[4],
+				ports_eth_addr[portid].addr_bytes[5]);
 
 		/* initialize port stats */
 		memset(&port_statistics, 0, sizeof(port_statistics));

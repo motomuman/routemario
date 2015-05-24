@@ -19,3 +19,17 @@ uint32_t ips_to_normal_order(char* ips[4]){
 return IPv4(atoi(ips[0]), atoi(ips[1]), atoi(ips[2]), atoi(ips[3]));
 }
 
+
+uint8_t is_broadcast(struct ether_addr ad){
+  return ad.addr_bytes[0] == 0xff && ad.addr_bytes[1] == 0xff && ad.addr_bytes[2] == 0xff &&
+    ad.addr_bytes[3] == 0xff && ad.addr_bytes[4] == 0xff && ad.addr_bytes[5] == 0xff;
+}
+uint8_t is_same_addr(struct ether_addr ad1, struct ether_addr ad2){
+  return ad1.addr_bytes[0] == ad2.addr_bytes[0] && 
+         ad1.addr_bytes[1] == ad2.addr_bytes[1] && 
+         ad1.addr_bytes[2] == ad2.addr_bytes[2] && 
+         ad1.addr_bytes[3] == ad2.addr_bytes[3] && 
+         ad1.addr_bytes[4] == ad2.addr_bytes[4] && 
+         ad1.addr_bytes[5] == ad2.addr_bytes[5];
+}
+
