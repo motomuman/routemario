@@ -123,6 +123,8 @@ struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32
           //set_ipv4_header(ip_pkt, rte_bswap32(ip_org->dst_addr), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
           set_ipv4_header(ip_pkt, rte_bswap32(myip), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
           2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
+          printf("length should be %d\n", 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
+          printf("real len = %d\n", ip_pkt->total_length);
           set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, 0, 0, 0);
 
           struct ipv4_hdr *icmp_ip_header;
