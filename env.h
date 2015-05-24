@@ -49,5 +49,13 @@ static const struct rte_eth_conf prt_conf = {
 	},
 };
 
+/* Per-port statistics struct */
+#define MAX_NB_CORE 128
+struct routemario_statistics {
+	uint64_t tx[MAX_NB_CORE];
+	uint64_t rx[MAX_NB_CORE];
+	uint64_t dropped[MAX_NB_CORE];
+} __rte_cache_aligned;
+struct routemario_statistics port_statistics[RTE_MAX_ETHPORTS];
 
 #endif

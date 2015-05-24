@@ -75,19 +75,8 @@ int find_port_fip(uint32_t ip){
     return -1;
 }
 
-
-
-
-#define MAX_NB_CORE 128
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
-/* Per-port statistics struct */
-struct l2fwd_port_statistics {
-	uint64_t tx[MAX_NB_CORE];
-	uint64_t rx[MAX_NB_CORE];
-	uint64_t dropped[MAX_NB_CORE];
-} __rte_cache_aligned;
-struct l2fwd_port_statistics port_statistics[RTE_MAX_ETHPORTS];
 
 /* A tsc-based timer responsible for triggering statistics printout */
 #define TIMER_MILLISECOND 2000000ULL /* around 1ms at 2 Ghz */
