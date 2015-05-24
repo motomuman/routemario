@@ -10,7 +10,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
-#include <getopt.h>
 #include <rte_common.h>
 #include <rte_log.h>
 #include <rte_memory.h>
@@ -77,10 +76,6 @@ int find_port_fip(uint32_t ip){
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
 
-/* A tsc-based timer responsible for triggering statistics printout */
-#define TIMER_MILLISECOND 2000000ULL /* around 1ms at 2 Ghz */
-#define MAX_TIMER_PERIOD 86400 /* 1 day max */
-static int64_t timer_period = 10 * TIMER_MILLISECOND * 1000; /* default period is 10 seconds */
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
@@ -281,14 +276,6 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             int destport;
             destport = forwarding_node_id(m->hash.rss);
             printf("!!!!!!!!!!!!!!destport!!!!!!!!!!!!!!!!!! = %d\n", destport);
-
-            printf("mac lookup!! MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
-                mac_table[portid][ret].addr_bytes[0],
-                mac_table[portid][ret].addr_bytes[1],
-                mac_table[portid][ret].addr_bytes[2],
-                mac_table[portid][ret].addr_bytes[3],
-                mac_table[portid][ret].addr_bytes[4],
-                mac_table[portid][ret].addr_bytes[5]);
             ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
             eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
             ip_hdr->hdr_checksum = 0;
@@ -296,7 +283,6 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             printf("\n");
             TX_enqueue(m, (uint8_t) destport);
           }else{
-            printf("debughoge0\n");
             struct rte_mbuf *pkt;
             struct ether_hdr *eth_pkt;
             struct arp_hdr *arp_pkt;
@@ -305,14 +291,12 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             struct ether_addr * dummy;
             set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
             arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
-
             set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
             eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
             int i;
+            eth_pkt->s_addr.addr_bytes[i] =0xff;
             for(i = 1; i <6; i++){
               eth_pkt->d_addr.addr_bytes[i] =0;
-            }
-            for(i = 0; i <6; i++){
               eth_pkt->s_addr.addr_bytes[i] =0xff;
             }
             printf("arp generate!!\n");
@@ -326,8 +310,6 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
         }
       }
     }
-
-
 }
 
 static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
@@ -405,7 +387,6 @@ static void router_main_loop(void){
 
 	prev_tsc = 0;
 	timer_tsc = 0;
-
 	lcore_id = rte_lcore_id();
 	queue_id = lcore_id;
 	qconf = &lcore_queue_conf[lcore_id];
@@ -474,121 +455,7 @@ static int router_launch_one_lcore(__attribute__((unused)) void *dummy){
 	return 0;
 }
 
-/* display usage */
-static void l2fwd_usage(const char *prgname){
-	printf("%s [EAL options] -- -p PORTMASK [-q NQ]\n"
-	       "  -p PORTMASK: hexadecimal bitmask of ports to configure\n"
-	       "  -q NQ: number of queue (=ports) per lcore (default is 1)\n"
-		   "  -T PERIOD: statistics will be refreshed each PERIOD seconds (0 to disable, 10 default, 86400 maximum)\n",
-	       prgname);
-}
 
-static  int l2fwd_parse_node_nb(const char *q_arg) {
-	char *end = NULL;
-	unsigned long n;
-	/* parse hexadecimal string */
-	n = strtoul(q_arg, &end, 10);
-	if ((q_arg[0] == '\0') || (end == NULL) || (*end != '\0')){
-		return -1;
-  }
-	if (n >= MAX_RX_QUEUE_PER_LCORE){
-		return -1;
-  }
-	return n;
-}
-
-static unsigned int l2fwd_parse_nqueue(const char *q_arg) {
-	char *end = NULL;
-	unsigned long n;
-
-	/* parse hexadecimal string */
-	n = strtoul(q_arg, &end, 10);
-	if ((q_arg[0] == '\0') || (end == NULL) || (*end != '\0')){
-		return 0;
-  }
-	if (n == 0){
-		return 0;
-  }
-	if (n >= MAX_RX_QUEUE_PER_LCORE){
-		return 0;
-  }
-	return n;
-}
-
-static int l2fwd_parse_timer_period(const char *q_arg) {
-	char *end = NULL;
-	int n;
-
-	/* parse number string */
-	n = strtol(q_arg, &end, 10);
-	if ((q_arg[0] == '\0') || (end == NULL) || (*end != '\0')){
-		return -1;
-  }
-	if (n >= MAX_TIMER_PERIOD){
-		return -1;
-  }
-	return n;
-}
-
-/* Parse the argument given in the command line of the application */
-static int l2fwd_parse_args(int argc, char **argv) {
-	int opt, ret;
-	char **argvopt;
-	int option_index;
-	char *prgname = argv[0];
-	static struct option lgopts[] = {
-		{NULL, 0, 0, 0}
-	};
-
-	argvopt = argv;
-
-	while ((opt = getopt_long(argc, argvopt, "p:T:w:",
-				  lgopts, &option_index)) != EOF) {
-
-		switch (opt) {
-
-		case 'w':
-      ret =  l2fwd_parse_node_nb(optarg);
-			if (ret == -1) {
-				printf("invalid node_nb number\n");
-				l2fwd_usage(prgname);
-				return -1;
-			}
-      node_id = ret;
-      printf("node_nb = %d\n", node_id);
-			break;
-
-
-		/* nqueue */
-
-		/* timer period */
-		case 'T':
-			timer_period = l2fwd_parse_timer_period(optarg) * 1000 * TIMER_MILLISECOND;
-			if (timer_period < 0) {
-				printf("invalid timer period\n");
-				l2fwd_usage(prgname);
-				return -1;
-			}
-			break;
-
-		/* long options */
-		case 0:
-			l2fwd_usage(prgname);
-			return -1;
-
-		default:
-			l2fwd_usage(prgname);
-			return -1;
-		}
-	}
-
-	if (optind >= 0)
-		argv[optind-1] = prgname;
-
-	ret = optind-1;
-	optind = 0; /* reset getopt lib */
-	return ret;
-}
 
 /* Check the link status of all ports in up to 9s, and print them finally */
 static void
@@ -692,7 +559,6 @@ int main(int argc, char **argv){
     }
   }
 
-	rx_lcore_id = 0;
 	qconf = NULL;
 
 	/* Initialize the port/queue configuration of each logical core */
@@ -793,7 +659,10 @@ int main(int argc, char **argv){
           RTE_ETH_FILTER_FLEXIBLE,
           RTE_ETH_FILTER_ADD,
           &filter);
-    
+      if(ret < 0){
+        printf("can't set filter\n");
+        return 1;
+      }
     }
   }
 
