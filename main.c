@@ -511,6 +511,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           if(ret >= 0){
             int destport;
             destport = forwarding_node_id(m->hash.rss);
+            printf("!!!!!!!!!!!!!!destport!!!!!!!!!!!!!!!!!! = %d\n", destport);
 
             printf("mac lookup!! MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
                 mac_table[portid][ret].addr_bytes[0],
