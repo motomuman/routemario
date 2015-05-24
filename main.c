@@ -83,9 +83,6 @@ struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 #define MAX_TIMER_PERIOD 86400 /* 1 day max */
 static int64_t timer_period = 10 * TIMER_MILLISECOND * 1000; /* default period is 10 seconds */
 
-
-
-
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
   /*
@@ -217,25 +214,25 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(is_same_addr(eth->d_addr, ports_eth_addr[portid] ) == 0 && is_broadcast(eth->d_addr) == 0){
-    printf("not to my eth so dwomp\n");
     rte_pktmbuf_free(m);
   }else{
     if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
       arp_handle_external(m, portid, eth);
     }else{
       printf("PACKET IS IP\n");
+      /*
+      uint32_t newkey;
+      newkey = ip_hdr->src_addr;
+      ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
+      mac_table[portid][ret] = eth->s_addr;                             //200
+      show_ip(newkey);
+      */
+
       struct ipv4_hdr *ip_hdr;
       ip_hdr = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
-      uint32_t newkey;
       int ret;
-      newkey = ip_hdr->src_addr;
-      printf("from  ");
-      show_ip(newkey);
-      printf("I ADDED this!!\n");
       printf("portid = %d\n", portid);
-      ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
       printf("debug1\n");
-      mac_table[portid][ret] = eth->s_addr;                             //200
       int outport;
       for(outport = 0; outport <nb_ports; outport++){
         if(ip_hdr->dst_addr==port_to_ip[outport]){
