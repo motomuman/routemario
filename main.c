@@ -245,70 +245,25 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
         ip_hdr->time_to_live--;
         if(ip_hdr->time_to_live == 0){
           printf("TTL 0 TIME EXCEEDED\n");
+          /*
           struct rte_mbuf *pkt;
           pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
           make_ttl_expkt(m, pkt, port_to_ip[portid]);
           TX_enqueue(pkt, (uint8_t) portid);
+          */
+            struct rte_mbuf *pkt;
+            pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
+            make_unreach_pkt(m, pkt, port_to_ip[portid]);
+            TX_enqueue(pkt, (uint8_t) portid);
+            printf("UNreachable!!!!\n");
         }else{
-
           //not to me
           struct next_set next_set =  lookup(rte_bswap32(ip_hdr->dst_addr));
           if(next_set.unreachable == 1){
-          struct rte_mbuf *pkt;
-          struct ether_hdr *eth_pkt;
-          struct ipv4_hdr *ip_pkt;
-          struct icmp_unreachable *icmp_pkt;
-          pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-          eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
-          ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
-          icmp_pkt = (struct icmp_unreachable *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
-
-          set_eth_header(eth_pkt, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_IPv4, 0);
-          set_ipv4_header(ip_pkt, rte_bswap32(port_to_ip[portid]), rte_bswap32(ip_hdr->src_addr), IP_NEXT_PROT_ICMP,
-          2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
-          //set_icmp_header(icmp_pkt, IP_ICMP_TIME_EXCEEDED, 0, icmp_hdr->icmp_cksum, icmp_hdr->icmp_ident, icmp_hdr->icmp_seq_nb);
-
-
-          struct ipv4_hdr *icmp_ip_header;
-          //struct icmp_ttl_data *icmp_ttl;
-          uint64_t *icmp_data;
-          uint64_t *icmp_data_tmp;
-          icmp_ip_header = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-	        icmp_ip_header->version_ihl = ip_hdr->version_ihl;		
-	        icmp_ip_header->type_of_service = ip_hdr->type_of_service;
-	        icmp_ip_header->total_length = ip_hdr->total_length;		
-	        icmp_ip_header->packet_id = ip_hdr->packet_id;	
-	        icmp_ip_header->fragment_offset = ip_hdr->fragment_offset;
-	        icmp_ip_header->time_to_live = ip_hdr->time_to_live+1;		
-	        icmp_ip_header->next_proto_id = ip_hdr->next_proto_id;	
-	        icmp_ip_header->hdr_checksum = ip_hdr->hdr_checksum;		
-	        icmp_ip_header->src_addr = ip_hdr->src_addr;		
-	        icmp_ip_header->dst_addr = ip_hdr->dst_addr;		
-
-          icmp_data_tmp = (uint64_t *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
-          printf("icmp_data= %"PRIu64, *icmp_data_tmp);
-          icmp_data = (uint64_t *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ 2*sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-          *icmp_data = *icmp_data_tmp;
-          //*icmp_data = 0xffffffffffffffffff;
-          printf("icmp_data= %"PRIu64, *icmp_data);
-          printf("\n");
-          //*icmp_data = 8;
-          //printf("icmp_data_tmp = %u\n", *icmp_data);
-
-
-
-          
-          (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
-          (pkt)->data_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
-          //(pkt)->pkt_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr);
-          //(pkt)->data_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr);
-          uint16_t tlen;
-          tlen  = pkt->pkt_len - (sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr));
-          set_icmp_unreachable(icmp_pkt, IP_ICMP_DESTINATION_UNREACHABLE, IP_ICMP_NETWORK_UNREACHABLE, 0, tlen, 777);
-          icmp_pkt->icmp_cksum     = cksum(icmp_pkt, tlen, 0);
-
-          TX_enqueue(pkt, (uint8_t) portid);
-
+            struct rte_mbuf *pkt;
+            pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
+            make_unreach_pkt(m, pkt, port_to_ip[portid]);
+            TX_enqueue(pkt, (uint8_t) portid);
             printf("UNreachable!!!!\n");
           }else{
           printf("dest ip is ");

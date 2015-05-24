@@ -46,21 +46,21 @@ void set_arp_header(struct arp_hdr *arp_hdr, struct ether_addr *src_mac, struct 
 
 
 void set_icmp_header(struct icmp_hdr *icmp_hdr, uint8_t icmp_type, uint8_t icmp_code, 
-uint16_t icmp_cksum, uint16_t icmp_ident, uint16_t icmp_seq_nb){
-icmp_hdr->icmp_type = icmp_type;
-icmp_hdr->icmp_code = icmp_code; 
-icmp_hdr->icmp_cksum = icmp_cksum; 
-icmp_hdr->icmp_ident = icmp_ident; 
-icmp_hdr->icmp_seq_nb = icmp_seq_nb;
+    uint16_t icmp_cksum, uint16_t icmp_ident, uint16_t icmp_seq_nb){
+  icmp_hdr->icmp_type = icmp_type;
+  icmp_hdr->icmp_code = icmp_code; 
+  icmp_hdr->icmp_cksum = icmp_cksum; 
+  icmp_hdr->icmp_ident = icmp_ident; 
+  icmp_hdr->icmp_seq_nb = icmp_seq_nb;
 }
 
 void set_icmp_unreachable(struct icmp_unreachable *icmp_hdr, uint8_t icmp_type, uint8_t icmp_code, 
-uint16_t icmp_cksum, uint8_t icmp_len, uint16_t icmp_next_mtu){
-icmp_hdr->icmp_type = icmp_type;
-icmp_hdr->icmp_code = icmp_code; 
-icmp_hdr->icmp_cksum = icmp_cksum; 
-icmp_hdr->icmp_len = icmp_len; 
-icmp_hdr->icmp_next_mtu = icmp_next_mtu;
+    uint16_t icmp_cksum, uint8_t icmp_len, uint16_t icmp_next_mtu){
+  icmp_hdr->icmp_type = icmp_type;
+  icmp_hdr->icmp_code = icmp_code; 
+  icmp_hdr->icmp_cksum = icmp_cksum; 
+  icmp_hdr->icmp_len = icmp_len; 
+  icmp_hdr->icmp_next_mtu = icmp_next_mtu;
 }
 
 void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_addr, uint16_t next_proto_id, uint16_t pkt_len)
@@ -107,7 +107,7 @@ void set_ipv4_header(struct ipv4_hdr *ip_hdr, uint32_t src_addr, uint32_t dst_ad
 }
 
 
-struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32_t myip){
+void make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32_t myip){
           struct ether_hdr *eth_org;
           struct ipv4_hdr *ip_org;
           eth_org = rte_pktmbuf_mtod(m, struct ether_hdr *);
@@ -129,18 +129,7 @@ struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32
 
           struct ipv4_hdr *icmp_ip_header;
           icmp_ip_header = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
-          //icmp_ip_header = ip_org;
-	        icmp_ip_header->version_ihl = ip_org->version_ihl;		
-	        icmp_ip_header->type_of_service = ip_org->type_of_service;
-	        icmp_ip_header->total_length = ip_org->total_length;		
-	        icmp_ip_header->packet_id = ip_org->packet_id;	
-	        icmp_ip_header->fragment_offset = ip_org->fragment_offset;
-	        icmp_ip_header->time_to_live = ip_org->time_to_live+1;		
-	        icmp_ip_header->next_proto_id = ip_org->next_proto_id;	
-	        icmp_ip_header->hdr_checksum = ip_org->hdr_checksum;		
-	        icmp_ip_header->src_addr = ip_org->src_addr;		
-	        icmp_ip_header->dst_addr = ip_org->dst_addr;		
-
+          *icmp_ip_header = *ip_org;
           uint64_t *icmp_data;
           uint64_t *icmp_data_tmp;
           icmp_data_tmp = (uint64_t *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
@@ -151,5 +140,39 @@ struct rte_mbuf *make_ttl_expkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32
           uint16_t tlen;
           tlen  = pkt->pkt_len - (sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr));
           icmp_pkt->icmp_cksum     = cksum(icmp_pkt, tlen, 0);
-          return pkt;
 }
+
+
+struct rte_mbuf *make_unreach_pkt(struct rte_mbuf *m, struct rte_mbuf *pkt, uint32_t myip){
+  struct ether_hdr *eth_org;
+  struct ipv4_hdr *ip_org;
+  eth_org = rte_pktmbuf_mtod(m, struct ether_hdr *);
+  ip_org = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
+
+  struct ether_hdr *eth_pkt;
+  struct ipv4_hdr *ip_pkt;
+  struct icmp_unreachable *icmp_pkt;
+  eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
+  ip_pkt = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
+  icmp_pkt = (struct icmp_unreachable *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
+  set_eth_header(eth_pkt, &eth_org->d_addr, &eth_org->s_addr, ETHER_TYPE_IPv4, 0);
+  set_ipv4_header(ip_pkt, rte_bswap32(myip), rte_bswap32(ip_org->src_addr), IP_NEXT_PROT_ICMP,
+      2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8); 
+
+  struct ipv4_hdr *icmp_ip_header;
+  icmp_ip_header = (struct ipv4_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
+  * icmp_ip_header = * ip_org;
+
+  uint64_t *icmp_data;
+  uint64_t *icmp_data_tmp;
+  icmp_data_tmp = (uint64_t *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
+  icmp_data = (uint64_t *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr)+ 2*sizeof(struct ipv4_hdr) + sizeof(struct icmp_hdr));
+  *icmp_data = *icmp_data_tmp;
+  (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
+  (pkt)->data_len = (int)sizeof(struct ether_hdr) + 2*(int)sizeof(struct ipv4_hdr)+ (int)sizeof(struct icmp_hdr)+8;
+  uint16_t tlen;
+  tlen  = pkt->pkt_len - (sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr));
+  set_icmp_unreachable(icmp_pkt, IP_ICMP_DESTINATION_UNREACHABLE, IP_ICMP_NETWORK_UNREACHABLE, 0, tlen, 777);
+  icmp_pkt->icmp_cksum = cksum(icmp_pkt, tlen, 0);
+}
+
