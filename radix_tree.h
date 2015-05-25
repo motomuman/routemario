@@ -32,11 +32,18 @@ struct next_set{
  unsigned unreachable;
 };
 
+struct next_set_comp{
+  unsigned nextport;
+  uint32_t nexthop;
+  unsigned link_local;
+ unsigned unreachable;
+ struct ether_addr next_mac;
+};
 
 struct radix_node *root;
 struct pradix_node *proot;
 
 struct next_set lookup(uint32_t dst_ip);
 
-struct next_set nextset_table[1024] __rte_cache_aligned;
+struct next_set_comp nextset_table[1024] __rte_cache_aligned;
 #endif
