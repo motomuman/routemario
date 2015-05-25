@@ -145,6 +145,7 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
   }
 }
 
+
 static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
