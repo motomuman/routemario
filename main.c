@@ -176,6 +176,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           struct next_set next_set;
           struct next_set_comp next_set_comp;
           int ret2;
+          printf("find ");
+          show_ip(ip_hdr->dst_addr);
           ret2 = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
           if(ret2 >= 0){
             next_set_comp = nextset_table[ret2]; 
@@ -191,13 +193,13 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             show_ip(ip_hdr->dst_addr);
             printf("nexthop = ");
             show_ip(next_set.nexthop);
-              printf("next MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
-                  eth->s_addr.addr_bytes[0],
-                  eth->s_addr.addr_bytes[1],
-                  eth->s_addr.addr_bytes[2],
-                  eth->s_addr.addr_bytes[3],
-                  eth->s_addr.addr_bytes[4],
-                  eth->s_addr.addr_bytes[5]);
+            printf("next MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
+                eth->s_addr.addr_bytes[0],
+                eth->s_addr.addr_bytes[1],
+                eth->s_addr.addr_bytes[2],
+                eth->s_addr.addr_bytes[3],
+                eth->s_addr.addr_bytes[4],
+                eth->s_addr.addr_bytes[5]);
 
             TX_enqueue(m, (uint8_t) destport);
           }else{
@@ -205,6 +207,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
             if(ret >= 0){
               ret2 = rte_hash_add_key(nextset_hash,(void *) &ip_hdr->dst_addr);
+              printf("insert ");
+              show_ip(ip_hdr->dst_addr);
               next_set_comp.nextport = next_set.nextport;
               next_set_comp.nexthop = next_set.nexthop;
               next_set_comp.link_local = next_set.link_local;
