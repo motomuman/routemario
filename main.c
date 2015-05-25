@@ -266,7 +266,6 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
 
 
 static void packet_handle(struct rte_mbuf *m, unsigned portid){
-  printf("packet come\n");
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(portid == node_id){
