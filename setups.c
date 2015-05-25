@@ -9,6 +9,10 @@
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 
+
+
+
+
 /* display usage */
 static void l2fwd_usage(const char *prgname){
 	printf("%s [EAL options] -- \n"
@@ -141,6 +145,19 @@ void setup_hash(uint8_t port_num) {
     if (mac_table_hash[i]== NULL)
       rte_exit(EXIT_FAILURE, "Unable to create the l3fwd hash on \n");
   }
+
+  struct rte_hash_parameters ip_to_nextset_hash_param = {
+    .name = NULL,
+    .entries = MAC_TABLE_ENTRIES,
+    .bucket_entries = 4,
+    .key_len = sizeof(uint32_t),
+    .hash_func = rte_hash_crc,
+    .hash_func_init_val = 0,
+  };
+  nextset_hash =  rte_hash_create(&ip_to_nextset_hash_param);
+  if (nextset_hash== NULL)
+    rte_exit(EXIT_FAILURE, "Unable to create the l3fwd hash on \n");
+
 }
 
 void setup_radix_tree(){

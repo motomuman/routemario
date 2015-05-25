@@ -6,6 +6,7 @@
 
 void setup_hash(uint8_t port_num);
 struct rte_hash *mac_table_hash[RTE_MAX_ETHPORTS];
+struct rte_hash *nextset_hash;
 
 #define MAC_TABLE_ENTRIES		1024
 

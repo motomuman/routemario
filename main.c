@@ -237,7 +237,17 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           TX_enqueue(pkt, (uint8_t) portid);
         }else{
           //not to me
-          struct next_set next_set =  lookup(rte_bswap32(ip_hdr->dst_addr));
+          struct next_set next_set;
+          ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
+          if(ret >= 0){
+            next_set = nextset_table[ret]; 
+            printf("out from casche\n");
+          }else{
+            next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
+            ret = rte_hash_add_key(mac_table_hash[portid],(void *) &next_set);
+            nextset_table[ret] = next_set;
+          }
+
           if(next_set.unreachable == 1){
             struct rte_mbuf *pkt;
             pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
@@ -328,9 +338,6 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
 
 
 static void packet_handle(struct rte_mbuf *m, unsigned portid){
-  //printf("----------------------------------------------------\n");
-  //printf("PACKET COME\n");
-  //printf("portid %u, coreid %u\n", portid, rte_lcore_id());
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(portid == node_id){
