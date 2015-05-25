@@ -148,7 +148,7 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
   }
 }
 
-static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
+static void packet_handle_external(struct rte_mbuf *m, unsigned portid, unsigned lcore_id){
   //printf("external\n");
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
@@ -202,7 +202,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           struct rte_mbuf *pkt;
           struct ether_hdr *eth_pkt;
           struct arp_hdr *arp_pkt;
-          pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
+          pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[lcore_id]);
           eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
           struct ether_addr * dummy;
           set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
@@ -222,7 +222,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
   }
 }
 
-static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
+static void packet_handle_internal(struct rte_mbuf *m, unsigned portid, unsigned lcore_id){
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
@@ -238,7 +238,7 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
       rte_pktmbuf_free(m);
       return;
     }else{
-      unsigned nextport = rte_lcore_id();
+      unsigned nextport = lcore_id;
       if(nextport == node_id){
         struct ether_hdr *eth_pkt;
         eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
@@ -251,7 +251,7 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
       }
     }
   }else{
-    unsigned nextport = rte_lcore_id();
+    unsigned nextport = lcore_id;
     if(nextport == node_id){
       struct ether_hdr *eth_pkt;
       eth_pkt = rte_pktmbuf_mtod(m, struct ether_hdr *);
@@ -265,13 +265,13 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
 }
 
 
-static void packet_handle(struct rte_mbuf *m, unsigned portid){
+static void packet_handle(struct rte_mbuf *m, unsigned portid, unsigned lcore_id){
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(portid == node_id){
-    packet_handle_external(m, portid);
+    packet_handle_external(m, portid, lcore_id);
   }else{
-    packet_handle_internal(m, portid);
+    packet_handle_internal(m, portid, lcore_id);
   }
 }
 
@@ -334,7 +334,7 @@ static void router_main_loop(void){
       for (j = 0; j < nb_rx; j++) {
         m = pkts_burst[j];
         rte_prefetch0(rte_pktmbuf_mtod(m, void *));
-        packet_handle(m, portid);
+        packet_handle(m, portid, lcore_id);
       }
     }
   }
