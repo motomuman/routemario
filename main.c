@@ -69,7 +69,7 @@ struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
-	uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
+	uint64_t total_packets_dropped, exter_total_packets_tx, exter_total_packets_rx, inter_total_packets_tx, inter_total_packets_rx;
 	unsigned portid;
 	total_packets_dropped = 0;
 	exter_total_packets_tx = 0;
@@ -103,10 +103,10 @@ static void print_stats(void) {
     }
   }
 	printf("\nAggregate statistics ==============================="
-		   "\extnTotal packets sent: %18"PRIu64
-		   "\extnTotal packets received: %14"PRIu64
-		   "\intnTotal packets sent: %18"PRIu64
-		   "\intnTotal packets received: %14"PRIu64
+		   "\nextnTotal packets sent: %18"PRIu64
+		   "\nenxtnTotal packets received: %14"PRIu64
+		   "\nintnTotal packets sent: %18"PRIu64
+		   "\nintnTotal packets received: %14"PRIu64
 		   "\nTotal packets dropped: %15"PRIu64,
 		   exter_total_packets_tx,
 		   exter_total_packets_rx,
