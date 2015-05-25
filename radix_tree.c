@@ -10,7 +10,7 @@ struct next_set lookup(uint32_t dst_ip){
   struct radix_node *now = root;
   for(i = 31; i >= 0; i--){
     if(now->done){
-      show_ip(now->nexthop);
+      //show_ip(now->nexthop);
       ret.nexthop = now->nexthop;
       ret.nextport = now->nextport;
       ret.link_local = now->link_local;
@@ -84,8 +84,8 @@ unsigned port_lookup(uint32_t dst_ip){
 
 void insert(uint32_t ip, uint32_t mask, uint32_t nexthop, unsigned nextport, unsigned link_local){
   nexthop = rte_bswap32(nexthop);
-  show_ip(ip);
-  show_ip(mask);
+  //show_ip(ip);
+  //show_ip(mask);
   int i;
   struct radix_node *now = root;
   for(i = 31; i >= 0; i--){
