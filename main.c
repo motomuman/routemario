@@ -181,7 +181,7 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
       + sizeof(struct ether_hdr));
       set_eth_header(eth, &ports_eth_addr[portid], &eth->s_addr, ETHER_TYPE_ARP, 0);
       set_arp_header(arp_pkt, &ports_eth_addr[portid], &eth->d_addr, port_to_ip[ret], arp->arp_data.arp_sip, ARP_OP_REPLY);
-      show_ip(port_to_ip[ret]);
+      //show_ip(port_to_ip[ret]);
       TX_enqueue(m, (uint8_t) portid);
     }else{
       rte_pktmbuf_free(m);
@@ -245,9 +245,9 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             TX_enqueue(pkt, (uint8_t) portid);
             printf("UNreachable!!!!\n");
           }else{
-            show_ip(ip_hdr->dst_addr);
-            show_ip(next_set.nexthop);
-            show_ip(next_set.nexthop);
+            //show_ip(ip_hdr->dst_addr);
+            //show_ip(next_set.nexthop);
+            //show_ip(next_set.nexthop);
             ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
             if(ret >= 0){
               int destport;
@@ -294,7 +294,7 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
       uint32_t newkey;
       unsigned ret;
       newkey = arp->arp_data.arp_sip;
-      show_ip(newkey);
+      //show_ip(newkey);
       ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
       mac_table[portid][ret] = arp->arp_data.arp_sha;;
       rte_pktmbuf_free(m);

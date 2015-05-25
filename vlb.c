@@ -42,7 +42,7 @@ forwarding_node_id(uint32_t rss)
     info->node_id = next_node_id();
   }
 
-  RTE_LOG(DEBUG, VLB, "gap %lu\n", gap);
+  //RTE_LOG(DEBUG, VLB, "gap %lu\n", gap);
   info->expire = now;
   return info->node_id;
 }
