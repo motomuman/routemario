@@ -148,11 +148,14 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(is_same_addr(eth->d_addr, ports_eth_addr[portid] ) == 0 && is_broadcast(eth->d_addr) == 0){
+    printf("debug0\n");
     rte_pktmbuf_free(m);
   }else{
+    printf("debug1\n");
     if(rte_bswap16(eth->ether_type) == ETHER_TYPE_ARP){
       arp_handle_external(m, portid, eth);
     }else{
+    printf("debug2\n");
       struct ipv4_hdr *ip_hdr;
       ip_hdr = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
       int ret;
@@ -160,6 +163,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
       outport = find_port_fip(ip_hdr->dst_addr);
       if(outport >= 0){
         if(ip_hdr->next_proto_id == IP_NEXT_PROT_ICMP){
+          printf("debu44\n");
           struct icmp_hdr *icmp_hdr;
           icmp_hdr = (struct icmp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr)+ sizeof(struct ipv4_hdr));
           if(icmp_hdr->icmp_type == IP_ICMP_ECHO_REQUEST){
@@ -172,6 +176,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             TX_enqueue(m, (uint8_t) portid);
           }
         }else{
+          printf("debug3\n");
           ip_hdr->time_to_live--;
           struct next_set next_set;
           struct next_set_comp next_set_comp;
