@@ -65,58 +65,6 @@ uint8_t nb_lcores;
 
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
-
-
-/* Print out statistics on packets dropped */
-static void print_stats(void) {
-	uint64_t total_packets_dropped, exter_total_packets_tx, exter_total_packets_rx, inter_total_packets_tx, inter_total_packets_rx;
-	unsigned portid;
-	total_packets_dropped = 0;
-	exter_total_packets_tx = 0;
-	exter_total_packets_rx = 0;
-	inter_total_packets_tx = 0;
-	inter_total_packets_rx = 0;
-  int i;
-
-	printf("\nPort statistics ====================================");
-
-	for (portid = 0; portid < nb_ports; portid++) {
-    for(i = 0; i < nb_lcores; i++){
-      printf("\nStatistics for port %u core %u ------------------------------"
-          "\nPackets sent: %24"PRIu64
-          "\nPackets received: %20"PRIu64
-          "\nPackets dropped: %21"PRIu64,
-          portid,
-          i,
-          port_statistics[portid].tx[i],
-          port_statistics[portid].rx[i],
-          port_statistics[portid].dropped[i]);
-
-      total_packets_dropped += port_statistics[portid].dropped[i];
-      if(portid == node_id){
-        exter_total_packets_tx += port_statistics[portid].tx[i];
-        exter_total_packets_rx += port_statistics[portid].rx[i];
-      }else{
-        inter_total_packets_tx += port_statistics[portid].tx[i];
-        inter_total_packets_rx += port_statistics[portid].rx[i];
-      }
-    }
-  }
-	printf("\nAggregate statistics ==============================="
-		   "\nextnTotal packets sent: %18"PRIu64
-		   "\nenxtnTotal packets received: %14"PRIu64
-		   "\nintnTotal packets sent: %18"PRIu64
-		   "\nintnTotal packets received: %14"PRIu64
-		   "\nTotal packets dropped: %15"PRIu64,
-		   exter_total_packets_tx,
-		   exter_total_packets_rx,
-		   inter_total_packets_tx,
-		   inter_total_packets_rx,
-		   total_packets_dropped);
-	printf("\n====================================================\n");
-}
-
-
 /* Send the burst of packets on an output interface */
 static int l2fwd_send_burst(struct lcore_queue_conf *qconf, unsigned n, uint8_t port, unsigned lcore_id) {
 	struct rte_mbuf **m_table;
@@ -125,9 +73,7 @@ static int l2fwd_send_burst(struct lcore_queue_conf *qconf, unsigned n, uint8_t 
 
 	m_table = (struct rte_mbuf **)qconf->tx_mbufs[port].m_table;
 	ret = rte_eth_tx_burst(port, (uint16_t) queue_id, m_table, (uint16_t) n);
-  port_statistics[port].tx[lcore_id] += ret;
   if (unlikely(ret < n)) {
-    port_statistics[port].dropped[lcore_id] += (n - ret);
     do {
       rte_pktmbuf_free(m_table[ret]);
     } while (++ret < n);
@@ -213,6 +159,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
       arp_handle_external(m, portid, eth);
     }else{
       struct ipv4_hdr *ip_hdr;
+      printf("ip dst =");
+      show_ip(ip_hdr->dst_addr);
       ip_hdr = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
       int ret;
       int outport;
@@ -229,84 +177,47 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             ip_hdr->dst_addr = ip_hdr->src_addr;
             ip_hdr->src_addr = tmp;
             TX_enqueue(m, (uint8_t) portid);
-          }else{
-            //other ICMP
           }
-        }else{
-          // not ICMP
         }
       }else{
         ip_hdr->time_to_live--;
-        if(ip_hdr->time_to_live == 0){
-          printf("TTL 0 TIME EXCEEDED\n");
-          struct rte_mbuf *pkt;
-          pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-          make_ttl_expkt(m, pkt, port_to_ip[portid]);
-          TX_enqueue(pkt, (uint8_t) portid);
+        struct next_set next_set;
+        ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
+        if(ret >= 0){
+          next_set = nextset_table[ret]; 
         }else{
-          //not to me
-          struct next_set next_set;
-          ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
-          if(ret >= 0){
-            next_set = nextset_table[ret]; 
-            printf("dstip =");
-            show_ip(ip_hdr->dst_addr);
-            printf("nexthop = ");
-            show_ip(next_set.nexthop);
-          }else{
-            next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
-            ret = rte_hash_add_key(nextset_hash,(void *) &ip_hdr->dst_addr);
-            nextset_table[ret] = next_set;
-          }
+          next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
+          ret = rte_hash_add_key(nextset_hash,(void *) &ip_hdr->dst_addr);
+          nextset_table[ret] = next_set;
+        }
 
-          if(next_set.unreachable == 1){
-            struct rte_mbuf *pkt;
-            pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-            make_unreach_pkt(m, pkt, port_to_ip[portid]);
-            TX_enqueue(pkt, (uint8_t) portid);
-            printf("UNreachable!!!!\n");
-          }else{
-            //show_ip(ip_hdr->dst_addr);
-            //show_ip(next_set.nexthop);
-            //show_ip(next_set.nexthop);
-            ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
-            if(ret >= 0){
-              int destport;
-              destport = forwarding_node_id(m->hash.rss);
-              ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
-              printf("next MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
-                  eth->s_addr.addr_bytes[0],
-                  eth->s_addr.addr_bytes[1],
-                  eth->s_addr.addr_bytes[2],
-                  eth->s_addr.addr_bytes[3],
-                  eth->s_addr.addr_bytes[4],
-                  eth->s_addr.addr_bytes[5]);
-
-              eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
-              ip_hdr->hdr_checksum = 0;
-              ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
-              //printf("\n");
-              TX_enqueue(m, (uint8_t) destport);
-            }else{
-              struct rte_mbuf *pkt;
-              struct ether_hdr *eth_pkt;
-              struct arp_hdr *arp_pkt;
-              pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
-              eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
-              struct ether_addr * dummy;
-              set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
-              arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
-              set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
-              eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
-              int i;
-              memset(&eth_pkt->s_addr, 0xff, 6);
-              memset(&eth_pkt->d_addr.addr_bytes[1], 0xff, 5);
-              (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
-              (pkt)->data_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
-              TX_enqueue(pkt, (uint8_t) next_set.nextport);
-              rte_pktmbuf_free(m);
-            }
-          }
+        ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
+        if(ret >= 0){
+          int destport;
+          destport = forwarding_node_id(m->hash.rss);
+          ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
+          eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
+          ip_hdr->hdr_checksum = 0;
+          ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
+          TX_enqueue(m, (uint8_t) destport);
+        }else{
+          struct rte_mbuf *pkt;
+          struct ether_hdr *eth_pkt;
+          struct arp_hdr *arp_pkt;
+          pkt = rte_pktmbuf_alloc(l2fwd_pktmbuf_pool[rte_lcore_id()]);
+          eth_pkt = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
+          struct ether_addr * dummy;
+          set_eth_header(eth_pkt, &ports_eth_addr[next_set.nextport], dummy, ETHER_TYPE_ARP, 1);
+          arp_pkt = (struct arp_hdr *)(rte_pktmbuf_mtod(pkt, unsigned char *) + sizeof(struct ether_hdr));
+          set_arp_header(arp_pkt, &ports_eth_addr[next_set.nextport], dummy, port_to_ip[next_set.nextport], next_set.nexthop, ARP_OP_REQUEST);
+          eth_pkt->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
+          int i;
+          memset(&eth_pkt->s_addr, 0xff, 6);
+          memset(&eth_pkt->d_addr.addr_bytes[1], 0xff, 5);
+          (pkt)->pkt_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
+          (pkt)->data_len = (int)sizeof(struct ether_hdr) + (int)sizeof(struct arp_hdr);
+          TX_enqueue(pkt, (uint8_t) next_set.nextport);
+          rte_pktmbuf_free(m);
         }
       }
     }
@@ -413,16 +324,6 @@ static void router_main_loop(void){
 				qconf->tx_mbufs[portid].len = 0;
 			}
 
-      //statistics!!!!!
-			if (timer_period > 0) {
-				timer_tsc += diff_tsc;
-				if (unlikely(timer_tsc >= (uint64_t) timer_period)) {
-					if (lcore_id == rte_get_master_lcore()) {
-						print_stats();
-						timer_tsc = 0;
-					}
-				}
-			}
 			prev_tsc = cur_tsc;
 		}
 
@@ -432,7 +333,6 @@ static void router_main_loop(void){
     for (i = 0; i < qconf->n_rx_port; i++) {
       portid = qconf->rx_port_list[i];
       nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST);
-      port_statistics[portid].rx[lcore_id] += nb_rx;
       for (j = 0; j < nb_rx; j++) {
         m = pkts_burst[j];
         rte_prefetch0(rte_pktmbuf_mtod(m, void *));
@@ -619,7 +519,6 @@ int main(int argc, char **argv){
 				ports_eth_addr[portid].addr_bytes[5]);
 
 		/* initialize port stats */
-		memset(&port_statistics, 0, sizeof(port_statistics));
 	}
 
 	if (!nb_ports) {
