@@ -242,6 +242,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           if(ret >= 0){
             next_set = nextset_table[ret]; 
             printf("out from casche\n");
+
           }else{
             next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
             ret = rte_hash_add_key(mac_table_hash[portid],(void *) &next_set);
