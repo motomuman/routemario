@@ -69,7 +69,6 @@ struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
-  /*
 	uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
 	unsigned portid;
 	total_packets_dropped = 0;
@@ -104,7 +103,6 @@ static void print_stats(void) {
 		   total_packets_rx,
 		   total_packets_dropped);
 	printf("\n====================================================\n");
-  */
 }
 
 
