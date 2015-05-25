@@ -186,12 +186,11 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             ip_hdr->hdr_checksum = 0;
             ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
 
-            next_set = nextset_table[ret]; 
+            //next_set = nextset_table[ret]; 
             printf("dstip =");
             show_ip(ip_hdr->dst_addr);
             printf("nexthop = ");
             show_ip(next_set.nexthop);
-<<<<<<< HEAD
               printf("next MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
                   eth->s_addr.addr_bytes[0],
                   eth->s_addr.addr_bytes[1],
@@ -201,8 +200,6 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
                   eth->s_addr.addr_bytes[5]);
 
             TX_enqueue(m, (uint8_t) destport);
-=======
->>>>>>> 6e20f4da4f24dfe2eed15143b00f6c6f023acdb6
           }else{
             next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
             ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
