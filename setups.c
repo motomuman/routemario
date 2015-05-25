@@ -134,12 +134,12 @@ void setup_hash(uint8_t port_num) {
     char s[10];
     sprintf(s, "%d", i);
     struct rte_hash_parameters mac_table_hash_param = {
-        .name = s,
-        .entries = MAC_TABLE_ENTRIES,
-        .bucket_entries = 4,
-        .key_len = sizeof(uint32_t),
-        .hash_func = rte_hash_crc,
-        .hash_func_init_val = 0,
+      .name = s,
+      .entries = MAC_TABLE_ENTRIES,
+      .bucket_entries = 4,
+      .key_len = sizeof(uint32_t),
+      .hash_func = rte_hash_crc,
+      .hash_func_init_val = 0,
     };
     mac_table_hash[i] =  rte_hash_create(&mac_table_hash_param);
     if (mac_table_hash[i]== NULL)
@@ -147,7 +147,7 @@ void setup_hash(uint8_t port_num) {
   }
 
   struct rte_hash_parameters ip_to_nextset_hash_param = {
-    .name = NULL,
+    .name = "next_set",
     .entries = MAC_TABLE_ENTRIES,
     .bucket_entries = 4,
     .key_len = sizeof(uint32_t),
