@@ -156,9 +156,9 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
     unsigned ret;
     newkey = arp->arp_data.arp_sip;
     //
-    printf("from arp add new key " );
-    show_ip(newkey);
-    printf("\n");
+    //printf("from arp add new key " );
+    //show_ip(newkey);
+    //printf("\n");
     //
     ret = rte_hash_add_key(mac_table_hash[portid],(void *) &newkey);
     mac_table[portid][ret] = arp->arp_data.arp_sha;;
@@ -194,7 +194,7 @@ static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ethe
 }
 
 static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
-  printf("external\n");
+  //printf("external\n");
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(is_same_addr(eth->d_addr, ports_eth_addr[portid] ) == 0 && is_broadcast(eth->d_addr) == 0){
@@ -255,7 +255,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
               eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
               ip_hdr->hdr_checksum = 0;
               ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
-              printf("\n");
+              //printf("\n");
               TX_enqueue(m, (uint8_t) destport);
             }else{
               struct rte_mbuf *pkt;
@@ -327,9 +327,9 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
 
 
 static void packet_handle(struct rte_mbuf *m, unsigned portid){
-  printf("----------------------------------------------------\n");
-  printf("PACKET COME\n");
-  printf("portid %u, coreid %u\n", portid, rte_lcore_id());
+  //printf("----------------------------------------------------\n");
+  //printf("PACKET COME\n");
+  //printf("portid %u, coreid %u\n", portid, rte_lcore_id());
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(portid == node_id){
@@ -617,7 +617,7 @@ int main(int argc, char **argv){
       if(port == node_id){
         continue;
       }
-      printf("mac = %d, port = %d\n", mac, port);
+      //printf("mac = %d, port = %d\n", mac, port);
       ret  = rte_eth_dev_filter_ctrl(port, 
           RTE_ETH_FILTER_FLEXIBLE,
           RTE_ETH_FILTER_ADD,
