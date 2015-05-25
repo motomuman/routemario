@@ -72,35 +72,46 @@ static void print_stats(void) {
 	uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
 	unsigned portid;
 	total_packets_dropped = 0;
-	total_packets_tx = 0;
-	total_packets_rx = 0;
+	exter_total_packets_tx = 0;
+	exter_total_packets_rx = 0;
+	inter_total_packets_tx = 0;
+	inter_total_packets_rx = 0;
   int i;
 
 	printf("\nPort statistics ====================================");
 
 	for (portid = 0; portid < nb_ports; portid++) {
     for(i = 0; i < nb_lcores; i++){
-		printf("\nStatistics for port %u core %u ------------------------------"
-			   "\nPackets sent: %24"PRIu64
-			   "\nPackets received: %20"PRIu64
-			   "\nPackets dropped: %21"PRIu64,
-			   portid,
-         i,
-			   port_statistics[portid].tx[i],
-			   port_statistics[portid].rx[i],
-			   port_statistics[portid].dropped[i]);
+      printf("\nStatistics for port %u core %u ------------------------------"
+          "\nPackets sent: %24"PRIu64
+          "\nPackets received: %20"PRIu64
+          "\nPackets dropped: %21"PRIu64,
+          portid,
+          i,
+          port_statistics[portid].tx[i],
+          port_statistics[portid].rx[i],
+          port_statistics[portid].dropped[i]);
 
-		total_packets_dropped += port_statistics[portid].dropped[i];
-		total_packets_tx += port_statistics[portid].tx[i];
-		total_packets_rx += port_statistics[portid].rx[i];
+      total_packets_dropped += port_statistics[portid].dropped[i];
+      if(portid == node_id){
+        exter_total_packets_tx += port_statistics[portid].tx[i];
+        exter_total_packets_rx += port_statistics[portid].rx[i];
+      }else{
+        inter_total_packets_tx += port_statistics[portid].tx[i];
+        inter_total_packets_rx += port_statistics[portid].rx[i];
+      }
     }
-	}
+  }
 	printf("\nAggregate statistics ==============================="
-		   "\nTotal packets sent: %18"PRIu64
-		   "\nTotal packets received: %14"PRIu64
+		   "\extnTotal packets sent: %18"PRIu64
+		   "\extnTotal packets received: %14"PRIu64
+		   "\intnTotal packets sent: %18"PRIu64
+		   "\intnTotal packets received: %14"PRIu64
 		   "\nTotal packets dropped: %15"PRIu64,
-		   total_packets_tx,
-		   total_packets_rx,
+		   exter_total_packets_tx,
+		   exter_total_packets_rx,
+		   inter_total_packets_tx,
+		   inter_total_packets_rx,
 		   total_packets_dropped);
 	printf("\n====================================================\n");
 }
