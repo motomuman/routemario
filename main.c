@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <string.h>
 #include <stdint.h>
 #include <inttypes.h>
@@ -73,9 +74,7 @@ static int l2fwd_send_burst(struct lcore_queue_conf *qconf, unsigned n, uint8_t 
 
   m_table = (struct rte_mbuf **)qconf->tx_mbufs[port].m_table;
   ret = rte_eth_tx_burst(port, (uint16_t) queue_id, m_table, (uint16_t) n);
-  port_statistics[port].tx[lcore_id] += ret;
   if (unlikely(ret < n)) {
-    port_statistics[port].dropped[lcore_id] += (n - ret);
     do {
       rte_pktmbuf_free(m_table[ret]);
     } while (++ret < n);
@@ -175,8 +174,8 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           }
         }else{
           ip_hdr->time_to_live--;
-          //not to me
           struct next_set next_set;
+
           ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
           if(ret >= 0){
             next_set = nextset_table[ret]; 
@@ -327,7 +326,6 @@ static void router_main_loop(void){
     for (i = 0; i < qconf->n_rx_port; i++) {
       portid = qconf->rx_port_list[i];
       nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST);
-      port_statistics[portid].rx[lcore_id] += nb_rx;
       for (j = 0; j < nb_rx; j++) {
         m = pkts_burst[j];
         rte_prefetch0(rte_pktmbuf_mtod(m, void *));
@@ -514,7 +512,6 @@ int main(int argc, char **argv){
 				ports_eth_addr[portid].addr_bytes[5]);
 
 		/* initialize port stats */
-		memset(&port_statistics, 0, sizeof(port_statistics));
 	}
 
 	if (!nb_ports) {
