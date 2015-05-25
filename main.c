@@ -159,8 +159,6 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
       arp_handle_external(m, portid, eth);
     }else{
       struct ipv4_hdr *ip_hdr;
-      printf("ip dst =");
-      show_ip(ip_hdr->dst_addr);
       ip_hdr = (struct ipv4_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
       int ret;
       int outport;
@@ -268,6 +266,7 @@ static void packet_handle_internal(struct rte_mbuf *m, unsigned portid){
 
 
 static void packet_handle(struct rte_mbuf *m, unsigned portid){
+  printf("packet come\n");
   struct ether_hdr *eth;
   eth = rte_pktmbuf_mtod(m, struct ether_hdr *);
   if(portid == node_id){
