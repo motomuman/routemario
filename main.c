@@ -249,10 +249,12 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
           if(ret >= 0){
             next_set = nextset_table[ret]; 
+            /*
             printf("dstip =");
             show_ip(ip_hdr->dst_addr);
             printf("nexthop = ");
             show_ip(next_set.nexthop);
+            */
           }else{
             next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
             ret = rte_hash_add_key(nextset_hash,(void *) &ip_hdr->dst_addr);
@@ -274,6 +276,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
               int destport;
               destport = forwarding_node_id(m->hash.rss);
               ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
+              /*
               printf("next MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
                   eth->s_addr.addr_bytes[0],
                   eth->s_addr.addr_bytes[1],
@@ -281,7 +284,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
                   eth->s_addr.addr_bytes[3],
                   eth->s_addr.addr_bytes[4],
                   eth->s_addr.addr_bytes[5]);
-
+              */
               eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
               ip_hdr->hdr_checksum = 0;
               ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
