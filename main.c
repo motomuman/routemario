@@ -128,10 +128,13 @@ static void print_stats(void) {
 //#define RX_PTHRESH 8 /**< Default values of RX prefetch threshold reg. */
 //#define RX_HTHRESH 8 /**< Default values of RX host threshold reg. */
 //#define RX_WTHRESH 4 /**< Default values of RX write-back threshold reg. */
-#define IGB_DEFAULT_RX_FREE_THRESH  32
-#define RX_PTHRESH 8 /**< Default values of RX prefetch threshold reg. */
-#define RX_HTHRESH 8 /**< Default values of RX host threshold reg. */
-#define RX_WTHRESH 4 /**< Default values of RX write-back threshold reg. */
+
+
+
+#define IGB_DEFAULT_RX_FREE_THRESH  64
+#define RX_PTHRESH 16 /**< Default values of RX prefetch threshold reg. */
+#define RX_HTHRESH 16 /**< Default values of RX host threshold reg. */
+#define RX_WTHRESH 8 /**< Default values of RX write-back threshold reg. */
 
 /*
  * These default values are optimized for use with the Intel(R) 82599 10 GbE
