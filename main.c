@@ -118,21 +118,35 @@ static void print_stats(void) {
       }
       */
     }
+    if(node_id == portid){
+      printf("EXTERNAL INPUT %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
+      printf("EXTERNAL OUTPUT %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
+      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets);
+      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets);
+    }else{
+      printf("INTERNAL FROM NODE%d  %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
+      printf("INTERNAL TO NODE%d  %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
+      printf("INTERNAL FROM NODE%d  %lu pps\n", newstat.ipackets);
+      printf("INTERNAL TO NODE%d  %lu pps\n",  newstat.opackets);
+    }
+/*
     printf("My node id is %d\n", node_id);
     printf("port id %d my stat :in :%lu\n", portid, total_packets_rx);
     printf("port id %d my stat :out:%lu\n",portid, total_packets_tx);
     printf("port id %d my stat :drop:%lu\n",portid, total_packets_dropped);
-    total_packets_tx = 0; 
-    total_packets_rx = 0; 
 
-    printf("port id %d TOTAL STAT:ibyte:%fGps\n", portid, (double)newstat.ibytes*8/1000/1000/1000/10);
-    printf("port id %d TOTAL STAT:obyte:%f\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
     printf("port id %d TOTAL STAT:ipacket:%lu\n", portid, newstat.ipackets);
     printf("port id %d TOTAL STAT:outpacket:%lu\n",portid, newstat.opackets);
+    */
+    /*
+     *
     printf("port id %d TOTAL STAT:ierrors:%lu\n",portid, newstat.ierrors);
     printf("port id %d TOTAL STAT:oerrors:%lu\n",portid, newstat.oerrors);
     printf("port id %d TOTAL STAT:imiss:%lu\n",portid, newstat.imissed);
     printf("port id %d TOTAL STAT:rxnombuf:%lu\n",portid, newstat.rx_nombuf);
+    */
+    total_packets_tx = 0; 
+    total_packets_rx = 0; 
     rte_eth_stats_reset(portid);
 
 
