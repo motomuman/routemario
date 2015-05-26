@@ -51,7 +51,7 @@
 #define MBUF_SIZE (2048 + sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM)
 #define NB_MBUF   8192
 
-#define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
+#define BURST_TX_DRAIN_US 1000 /* TX drain every ~100us */
 /*
  * Configurable number of RX/TX ring descriptors
  */
@@ -421,7 +421,6 @@ static void router_main_loop(void){
       if ( (nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST)) == 0 ){
         continue;
       }
-       printf("nb_rx = %d\n", nb_rx);
       int PREFETCH_OFFSET = (nb_rx>>1);
       port_statistics[portid].rx[lcore_id] += nb_rx;
       /*
