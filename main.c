@@ -131,7 +131,7 @@ static void print_stats(void) {
 
 
 
-#define IGB_DEFAULT_RX_FREE_THRESH  64
+#define IGB_DEFAULT_RX_FREE_THRESH  32
 #define RX_PTHRESH 16 /**< Default values of RX prefetch threshold reg. */
 #define RX_HTHRESH 16 /**< Default values of RX host threshold reg. */
 #define RX_WTHRESH 8 /**< Default values of RX write-back threshold reg. */
