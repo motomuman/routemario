@@ -151,7 +151,7 @@ static const struct rte_eth_rxconf rx_conf = {
 		.wthresh = RX_WTHRESH,
 	},
   .rx_free_thresh = IGB_DEFAULT_RX_FREE_THRESH,
-  .rx_drop_en = 1
+  .rx_drop_en = 0
 };
 
 
