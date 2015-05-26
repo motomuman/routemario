@@ -45,7 +45,6 @@
 #include"env.h"
 #include"vlb.h"
 
-#define PREFETCH_OFFSET		5
 
 #define RTE_LOGTYPE_L2FWD RTE_LOGTYPE_USER1
 
@@ -419,7 +418,9 @@ static void router_main_loop(void){
 		 */
     for (i = 0; i < qconf->n_rx_port; i++) {
       portid = qconf->rx_port_list[i];
-      nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST);
+      if ( (nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST)) == 0 )
+        continue;
+      int PREFETCH_OFFSET = (nb_rx>>1);
       port_statistics[portid].rx[lcore_id] += nb_rx;
       /*
       for (j = 0; j < nb_rx; j++) {
