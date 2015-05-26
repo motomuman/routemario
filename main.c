@@ -81,8 +81,8 @@ static void print_stats(void) {
 	inter_total_packets_rx = 0;
   int i;
 
-	printf("\nPort statistics ====================================");
 
+	printf("\nPort statistics ====================================");
 	for (portid = 0; portid < nb_ports; portid++) {
     for(i = 0; i < nb_lcores; i++){
       printf("\nStatistics for port %u core %u ------------------------------"

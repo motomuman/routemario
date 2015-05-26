@@ -5,7 +5,7 @@
 #include <rte_ethdev.h>
 
 //#define MAX_PKT_BURST 32
-#define MAX_PKT_BURST 54
+#define MAX_PKT_BURST 32
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 #define MAX_TIMER_PERIOD 86400 /* 1 day max */
