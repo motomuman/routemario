@@ -119,6 +119,43 @@ static void print_stats(void) {
 	printf("\n====================================================\n");
 }
 
+/*
+ * RX and TX Prefetch, Host, and Write-back threshold values should be
+ * carefully set for optimal performance. Consult the network
+ * controller's datasheet and supporting DPDK documentation for guidance
+ * on how these parameters should be set.
+ */
+//#define RX_PTHRESH 8 /**< Default values of RX prefetch threshold reg. */
+//#define RX_HTHRESH 8 /**< Default values of RX host threshold reg. */
+//#define RX_WTHRESH 4 /**< Default values of RX write-back threshold reg. */
+#define IGB_DEFAULT_RX_FREE_THRESH  32
+#define RX_PTHRESH 8 /**< Default values of RX prefetch threshold reg. */
+#define RX_HTHRESH 8 /**< Default values of RX host threshold reg. */
+#define RX_WTHRESH 4 /**< Default values of RX write-back threshold reg. */
+
+/*
+ * These default values are optimized for use with the Intel(R) 82599 10 GbE
+ * Controller and the DPDK ixgbe PMD. Consider using other values for other
+ * network controllers and/or network drivers.
+ */
+
+
+
+static const struct rte_eth_rxconf rx_conf = {
+	.rx_thresh = {
+		.pthresh = RX_PTHRESH,
+		.hthresh = RX_HTHRESH,
+		.wthresh = RX_WTHRESH,
+	},
+  .rx_free_thresh = IGB_DEFAULT_RX_FREE_THRESH,
+  .rx_drop_en = 1
+};
+
+
+
+
+
+
 
 /* Send the burst of packets on an output interface */
 static int l2fwd_send_burst(struct lcore_queue_conf *qconf, unsigned n, uint8_t port, unsigned lcore_id) {
@@ -585,11 +622,13 @@ int main(int argc, char **argv){
 		//mac addr of portid -> ports_eth_addr[portid]
     rte_eth_macaddr_get(portid,&ports_eth_addr[portid]);
 
+      
 		/* init one RX queue */
     fflush(stdout);
     int i;
     for(i = 0; i < nb_lcores;i++){
-      ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), NULL, l2fwd_pktmbuf_pool[i]);
+      //ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), NULL , l2fwd_pktmbuf_pool[i]);
+      ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), &rx_conf , l2fwd_pktmbuf_pool[i]);
       if (ret < 0)
         rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
             ret, (unsigned) portid);

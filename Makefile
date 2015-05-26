@@ -13,7 +13,7 @@ APP = routemario
 # all source are stored in SRCS-y
 SRCS-y := setups.c vlb.c tool.c  radix_tree.c pktmake.c  main.c 
 
-CFLAGS += -Ofast
+CFLAGS += -O3
 #CFLAGS += $(WERROR_FLAGS)
 
 include $(RTE_SDK)/mk/rte.extapp.mk
