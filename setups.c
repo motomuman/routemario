@@ -88,7 +88,7 @@ static int l2fwd_parse_timer_period(const char *q_arg) {
 
 	argvopt = argv;
 
-	while ((opt = getopt_long(argc, argvopt, "p:T:w:",
+	while ((opt = getopt_long(argc, argvopt, "p:T:w:l:",
 				  lgopts, &option_index)) != EOF) {
 
 		switch (opt) {
