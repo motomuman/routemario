@@ -118,6 +118,7 @@ static void print_stats(void) {
       }
       */
     }
+    printf("My node id is %d\n", node_id);
     printf("port id %d my stat :in :%lu\n", portid, total_packets_rx);
     printf("port id %d my stat :out:%lu\n",portid, total_packets_tx);
     printf("port id %d my stat :drop:%lu\n",portid, total_packets_dropped);
