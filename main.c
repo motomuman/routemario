@@ -131,10 +131,10 @@ static void print_stats(void) {
 
 
 
-#define IGB_DEFAULT_RX_FREE_THRESH  32
-#define RX_PTHRESH 16 /**< Default values of RX prefetch threshold reg. */
-#define RX_HTHRESH 16 /**< Default values of RX host threshold reg. */
-#define RX_WTHRESH 8 /**< Default values of RX write-back threshold reg. */
+//#define IGB_DEFAULT_RX_FREE_THRESH  32
+//#define RX_PTHRESH 16 /**< Default values of RX prefetch threshold reg. */
+//#define RX_HTHRESH 16 /**< Default values of RX host threshold reg. */
+//#define RX_WTHRESH 8 /**< Default values of RX write-back threshold reg. */
 
 /*
  * These default values are optimized for use with the Intel(R) 82599 10 GbE
@@ -142,8 +142,7 @@ static void print_stats(void) {
  * network controllers and/or network drivers.
  */
 
-
-
+/*
 static const struct rte_eth_rxconf rx_conf = {
 	.rx_thresh = {
 		.pthresh = RX_PTHRESH,
@@ -153,6 +152,7 @@ static const struct rte_eth_rxconf rx_conf = {
   .rx_free_thresh = IGB_DEFAULT_RX_FREE_THRESH,
   .rx_drop_en = 0
 };
+*/
 
 
 
@@ -630,8 +630,7 @@ int main(int argc, char **argv){
     fflush(stdout);
     int i;
     for(i = 0; i < nb_lcores;i++){
-      //ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), NULL , l2fwd_pktmbuf_pool[i]);
-      ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), &rx_conf , l2fwd_pktmbuf_pool[i]);
+      ret = rte_eth_rx_queue_setup(portid, i, nb_rxd, rte_eth_dev_socket_id(portid), NULL , l2fwd_pktmbuf_pool[i]);
       if (ret < 0)
         rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
             ret, (unsigned) portid);
