@@ -360,7 +360,8 @@ static void router_main_loop(void){
 	struct rte_mbuf *m;
 	unsigned lcore_id, queue_id;
 	uint64_t prev_tsc, diff_tsc, cur_tsc, timer_tsc;
-	unsigned i, j, portid, nb_rx;
+	unsigned i, portid;
+  int j, nb_rx;
 	struct lcore_queue_conf *qconf;
 	const uint64_t drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US;
 
