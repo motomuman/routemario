@@ -158,7 +158,6 @@ static int TX_enqueue(struct rte_mbuf *m, uint8_t port) {
   return 0;
 }
 
-
 static void arp_handle_external(struct rte_mbuf *m, unsigned portid, struct ether_hdr *eth){
   struct arp_hdr *arp;
   arp = (struct arp_hdr *)(rte_pktmbuf_mtod(m, unsigned char *) + sizeof(struct ether_hdr));
@@ -266,14 +265,15 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           }else{
             ret = rte_hash_lookup(mac_table_hash[next_set.nextport], (const void *)&next_set.nexthop);
             if(ret >= 0){
-              int destport;
-              destport = forwarding_node_id(m->hash.rss);
+              ///int destport;
+              ///destport = forwarding_node_id(m->hash.rss);
               ether_addr_copy(&mac_table[next_set.nextport][ret], &eth->s_addr);
               eth->d_addr.addr_bytes[0] = (uint8_t)(0xf) + (next_set.nextport<<4);
               ip_hdr->hdr_checksum = 0;
               ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
               //printf("\n");
-              TX_enqueue(m, (uint8_t) destport);
+              TX_enqueue(m, (uint8_t) next_set.nextport);
+              //TX_enqueue(m, (uint8_t) destport);
             }else{
               struct rte_mbuf *pkt;
               struct ether_hdr *eth_pkt;
