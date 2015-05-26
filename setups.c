@@ -35,6 +35,16 @@ static  int l2fwd_parse_node_nb(const char *q_arg) {
 	return n;
 }
 
+static  int l2fwd_parse_data_len(const char *q_arg) {
+	char *end = NULL;
+	unsigned long n;
+	n = strtoul(q_arg, &end, 10);
+	if ((q_arg[0] == '\0') || (end == NULL) || (*end != '\0')){
+		return -1;
+  }
+	return n;
+}
+
 static unsigned int l2fwd_parse_nqueue(const char *q_arg) {
 	char *end = NULL;
 	unsigned long n;
@@ -92,6 +102,18 @@ static int l2fwd_parse_timer_period(const char *q_arg) {
 			}
       node_id = ret;
       printf("node_nb = %d\n", node_id);
+			break;
+
+
+		case 'l':
+      ret =  l2fwd_parse_data_len(optarg);
+			if (ret == -1) {
+				printf("invalid node_nb number\n");
+				l2fwd_usage(prgname);
+				return -1;
+			}
+      data_len = ret;
+      printf("data_len = %d\n", node_id);
 			break;
 
 

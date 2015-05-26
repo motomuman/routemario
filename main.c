@@ -83,6 +83,7 @@ static void print_stats(void) {
 
 
 	printf("\nPort statistics ====================================\n");
+  printf("my node id = %d: data size = %dbyte\n", node_id, data_len);
 	for (portid = 0; portid < nb_ports; portid++) {
   int ret;
   ret = rte_eth_stats_get(portid, &newstat);
@@ -121,13 +122,13 @@ static void print_stats(void) {
     if(node_id == portid){
       printf("EXTERNAL INPUT %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
       printf("EXTERNAL OUTPUT %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets);
-      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets);
+      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets/10/1000/1000);
+      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets/10/1000/1000);
     }else{
       printf("INTERNAL FROM NODE[%d]  %f Gps\n",portid, (double)newstat.ibytes*8/1000/1000/1000/10);
       printf("INTERNAL TO NODE[%d]  %f Gps\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets);
-      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
+      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets/10/1000/1000);
+      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets/10/1000/1000);
     }
 /*
     printf("My node id is %d\n", node_id);
@@ -335,6 +336,7 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
           TX_enqueue(pkt, (uint8_t) portid);
         }else{
           //not to me
+          /*
           struct next_set next_set;
           ret = rte_hash_lookup(nextset_hash, (const void *)&ip_hdr->dst_addr);
           if(ret >= 0){
@@ -344,6 +346,9 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
             ret = rte_hash_add_key(nextset_hash,(void *) &ip_hdr->dst_addr);
             nextset_table[ret] = next_set;
           }
+          */
+          struct next_set next_set;
+          next_set = lookup(rte_bswap32(ip_hdr->dst_addr));
 
           if(next_set.unreachable == 1){
             struct rte_mbuf *pkt;
