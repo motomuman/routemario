@@ -9,7 +9,9 @@
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 #define MAX_TIMER_PERIOD 86400 /* 1 day max */
-#define TIMER_MILLISECOND 2000000ULL /* around 1ms at 2 Ghz */
+//#define TIMER_MILLISECOND 2000000ULL /* around 1ms at 2 Ghz */
+#define TIMER_MILLISECOND 3500000ULL /* around 1ms at 2 Ghz */
+
 static int64_t timer_period = 10 * TIMER_MILLISECOND * 1000; /* default period is 10 seconds */
 
 

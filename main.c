@@ -68,23 +68,30 @@ uint8_t nb_lcores;
 
 struct rte_mempool * l2fwd_pktmbuf_pool[MAX_NB_CORE];
 
+struct rte_eth_stats oldstat;
+struct rte_eth_stats newstat;
 
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
-	uint64_t total_packets_dropped, exter_total_packets_tx, exter_total_packets_rx, inter_total_packets_tx, inter_total_packets_rx;
+	uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
 	unsigned portid;
 	total_packets_dropped = 0;
-	exter_total_packets_tx = 0;
-	exter_total_packets_rx = 0;
-	inter_total_packets_tx = 0;
-	inter_total_packets_rx = 0;
+	total_packets_tx = 0;
+	total_packets_rx = 0;
   int i;
 
 
-	printf("\nPort statistics ====================================");
+	printf("\nPort statistics ====================================\n");
 	for (portid = 0; portid < nb_ports; portid++) {
+  int ret;
+  ret = rte_eth_stats_get(portid, &newstat);
     for(i = 0; i < nb_lcores; i++){
+      /*
+      printf("\n port = %d Q = %d: ipacket:%lu\n", portid, i, newstat.q_ipackets[i]);
+      printf("port = %d Q = %d: outpacket:%lu\n", portid, i,  newstat.q_opackets[i]);
+      printf("port = %d Q = %d: ibyte:%lu\n", portid, i, newstat.q_ibytes[i]);
+      printf("port = %d Q = %d: outbyte:%lu\n", portid, i,  newstat.q_obytes[i]);
       printf("\nStatistics for port %u core %u ------------------------------"
           "\nPackets sent: %24"PRIu64
           "\nPackets received: %20"PRIu64
@@ -94,8 +101,14 @@ static void print_stats(void) {
           port_statistics[portid].tx[i],
           port_statistics[portid].rx[i],
           port_statistics[portid].dropped[i]);
-
+      */
+      total_packets_tx += port_statistics[portid].tx[i];
+      total_packets_rx += port_statistics[portid].rx[i];
       total_packets_dropped += port_statistics[portid].dropped[i];
+      port_statistics[portid].tx[i] = 0;
+      port_statistics[portid].rx[i] = 0;
+      port_statistics[portid].dropped[i] = 0;
+      /*
       if(portid == node_id){
         exter_total_packets_tx += port_statistics[portid].tx[i];
         exter_total_packets_rx += port_statistics[portid].rx[i];
@@ -103,9 +116,28 @@ static void print_stats(void) {
         inter_total_packets_tx += port_statistics[portid].tx[i];
         inter_total_packets_rx += port_statistics[portid].rx[i];
       }
+      */
     }
+    printf("port id %d my stat :in :%lu\n", portid, total_packets_rx);
+    printf("port id %d my stat :out:%lu\n",portid, total_packets_tx);
+    printf("port id %d my stat :drop:%lu\n",portid, total_packets_dropped);
+    total_packets_tx = 0; 
+    total_packets_rx = 0; 
+
+    printf("port id %d TOTAL STAT:ibyte:%fGps\n", portid, (double)newstat.ibytes*8/1000/1000/1000/10);
+    printf("port id %d TOTAL STAT:obyte:%f\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
+    printf("port id %d TOTAL STAT:ipacket:%lu\n", portid, newstat.ipackets);
+    printf("port id %d TOTAL STAT:outpacket:%lu\n",portid, newstat.opackets);
+    printf("port id %d TOTAL STAT:ierrors:%lu\n",portid, newstat.ierrors);
+    printf("port id %d TOTAL STAT:oerrors:%lu\n",portid, newstat.oerrors);
+    printf("port id %d TOTAL STAT:imiss:%lu\n",portid, newstat.imissed);
+    printf("port id %d TOTAL STAT:rxnombuf:%lu\n",portid, newstat.rx_nombuf);
+    rte_eth_stats_reset(portid);
+
+
   }
-	printf("\nAggregate statistics ==============================="
+  /*
+ printf("\nAggregate statistics ==============================="
 		   "\nextnTotal packets sent: %18"PRIu64
 		   "\nenxtnTotal packets received: %14"PRIu64
 		   "\nintnTotal packets sent: %18"PRIu64
@@ -117,6 +149,7 @@ static void print_stats(void) {
 		   inter_total_packets_rx,
 		   total_packets_dropped);
 	printf("\n====================================================\n");
+  */
 }
 
 /*
@@ -441,7 +474,6 @@ static void router_main_loop(void){
 						 (uint8_t) portid, lcore_id);
 				qconf->tx_mbufs[portid].len = 0;
 			}
-
       //statistics!!!!!
 			if (timer_period > 0) {
 				timer_tsc += diff_tsc;
