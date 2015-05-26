@@ -130,6 +130,7 @@ static void print_stats(void) {
       printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets/10/1000/1000);
       printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets/10/1000/1000);
     }
+	fflush(stdout);
 /*
     printf("My node id is %d\n", node_id);
     printf("port id %d my stat :in :%lu\n", portid, total_packets_rx);
