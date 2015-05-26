@@ -418,8 +418,10 @@ static void router_main_loop(void){
 		 */
     for (i = 0; i < qconf->n_rx_port; i++) {
       portid = qconf->rx_port_list[i];
-      if ( (nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST)) == 0 )
+      if ( (nb_rx = rte_eth_rx_burst((uint8_t) portid, (uint8_t)queue_id, pkts_burst, MAX_PKT_BURST)) == 0 ){
         continue;
+      }
+       printf("nb_rx = %d\n", nb_rx);
       int PREFETCH_OFFSET = (nb_rx>>1);
       port_statistics[portid].rx[lcore_id] += nb_rx;
       /*
