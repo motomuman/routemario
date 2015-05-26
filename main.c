@@ -124,10 +124,10 @@ static void print_stats(void) {
       printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets);
       printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets);
     }else{
-      printf("INTERNAL FROM NODE%d  %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
-      printf("INTERNAL TO NODE%d  %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("INTERNAL FROM NODE%d  %lu pps\n", newstat.ipackets);
-      printf("INTERNAL TO NODE%d  %lu pps\n",  newstat.opackets);
+      printf("INTERNAL FROM NODE[%d]  %f Gps\n",portid, (double)newstat.ibytes*8/1000/1000/1000/10);
+      printf("INTERNAL TO NODE[%d]  %f Gps\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
+      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets);
+      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
     }
 /*
     printf("My node id is %d\n", node_id);
