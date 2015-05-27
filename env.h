@@ -12,7 +12,7 @@
 //#define TIMER_MILLISECOND 2000000ULL /* around 1ms at 2 Ghz */
 #define TIMER_MILLISECOND 3500000ULL /* around 1ms at 2 Ghz */
 
-static int64_t timer_period = 10 * TIMER_MILLISECOND * 1000; /* default period is 10 seconds */
+static int64_t timer_period = 60 * TIMER_MILLISECOND * 1000; /* default period is 10 seconds */
 
 
 static struct ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];

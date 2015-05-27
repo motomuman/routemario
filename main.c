@@ -82,7 +82,6 @@ static void print_stats(void) {
   int i;
 
 
-	printf("\nPort statistics ====================================\n");
   printf("my node id = %d: data size = %dbyte\n", node_id, data_len);
 	for (portid = 0; portid < nb_ports; portid++) {
   int ret;
@@ -120,15 +119,13 @@ static void print_stats(void) {
       */
     }
     if(node_id == portid){
-      printf("EXTERNAL INPUT %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
-      printf("EXTERNAL OUTPUT %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets);
-      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets);
+      printf("out->%d:%lu\n", node_id, newstat.ipackets);
+      printf("%d->out:%lu\n", node_id, newstat.opackets);
+      //printf(" out-> OUTPUT %lu pps\n",  newstat.opackets);
     }else{
-      printf("INTERNAL FROM NODE[%d]  %f Gps\n",portid, (double)newstat.ibytes*8/1000/1000/1000/10);
-      printf("INTERNAL TO NODE[%d]  %f Gps\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets);
-      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
+      printf("%d->%d:%lu\n",portid,node_id, newstat.ipackets);
+      printf("%d->%d:%lu\n",node_id,portid, newstat.opackets);
+      //printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
     }
 	fflush(stdout);
 /*
@@ -150,7 +147,6 @@ static void print_stats(void) {
     total_packets_tx = 0; 
     total_packets_rx = 0; 
     rte_eth_stats_reset(portid);
-
 
   }
   /*
@@ -732,6 +728,7 @@ int main(int argc, char **argv){
 
   int mac;
   int port;
+
   for(mac = 0; mac < nb_ports; mac++){
     struct rte_eth_flex_filter filter;
     filter.len = 8;
@@ -757,6 +754,8 @@ int main(int argc, char **argv){
       }
     }
   }
+
+
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(router_launch_one_lcore, NULL, CALL_MASTER);
