@@ -362,10 +362,10 @@ static void packet_handle_external(struct rte_mbuf *m, unsigned portid){
               ip_hdr->hdr_checksum = 0;
               ip_hdr->hdr_checksum =  cksum(ip_hdr,sizeof(struct ipv4_hdr), 0);
               //printf("\n");
-              //TX_enqueue(m, (uint8_t) next_set.nextport);
-              int destport;
-              destport = forwarding_node_id(m->hash.rss);
-              TX_enqueue(m, (uint8_t) destport);
+              TX_enqueue(m, (uint8_t) next_set.nextport);
+              //int destport;
+              //destport = forwarding_node_id(m->hash.rss);
+              //TX_enqueue(m, (uint8_t) destport);
             }else{
               struct rte_mbuf *pkt;
               struct ether_hdr *eth_pkt;
