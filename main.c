@@ -122,13 +122,13 @@ static void print_stats(void) {
     if(node_id == portid){
       printf("EXTERNAL INPUT %f Gps\n", (double)newstat.ibytes*8/1000/1000/1000/10);
       printf("EXTERNAL OUTPUT %f Gps\n", (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets/10/1000/1000);
-      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets/10/1000/1000);
+      printf("EXTERNAL INPUT %lu pps\n", newstat.ipackets);
+      printf("EXTERNAL OUTPUT %lu pps\n",  newstat.opackets);
     }else{
       printf("INTERNAL FROM NODE[%d]  %f Gps\n",portid, (double)newstat.ibytes*8/1000/1000/1000/10);
       printf("INTERNAL TO NODE[%d]  %f Gps\n",portid, (double)newstat.obytes*8/1000/1000/1000/10);
-      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets/10/1000/1000);
-      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets/10/1000/1000);
+      printf("INTERNAL FROM NODE[%d]  %lu pps\n",portid, newstat.ipackets);
+      printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
     }
 	fflush(stdout);
 /*
