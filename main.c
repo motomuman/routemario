@@ -82,7 +82,7 @@ static void print_stats(void) {
   int i;
 
 
-  printf("my node id = %d: data size = %dbyte\n", node_id, data_len);
+  printf("my node id = %d data size = %dbyte\n", node_id, data_len);
 	for (portid = 0; portid < nb_ports; portid++) {
   int ret;
   ret = rte_eth_stats_get(portid, &newstat);
