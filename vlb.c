@@ -47,6 +47,9 @@ forwarding_node_id(uint32_t rss)
   //info->expire = now;
   uint8_t ret;
   ret = rte_rand() & 3;
+  if(ret == node_id){
+    ret = (++ret)&3;
+  }
   return ret;
   //return info->node_id;
 }
