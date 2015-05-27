@@ -10,7 +10,6 @@
 #include <rte_common.h>
 #include <rte_log.h>
 #include <rte_cycles.h>
-#include<rte_random.h>
 
 #include "vlb.h"
 #include "env.h"
@@ -35,21 +34,15 @@ next_node_id() {
 uint8_t
 forwarding_node_id(uint32_t rss)
 {
- // uint32_t index = rss & (VLB_SIZE -1);
- // struct vlb_info *info = &vlb_tb[index];
-//  uint64_t now =  rte_get_timer_cycles();
-//  uint64_t gap =  now - info->expire;
+  uint32_t index = rss & (VLB_SIZE -1);
+  struct vlb_info *info = &vlb_tb[index];
+  uint64_t now =  rte_get_timer_cycles();
+  uint64_t gap =  now - info->expire;
 //  if (!info->expire || gap > EXPIRE_TIME) {
-//    info->node_id = next_node_id();
+    info->node_id = next_node_id();
 //  }
 
   //RTE_LOG(DEBUG, VLB, "gap %lu\n", gap);
-  //info->expire = now;
-  uint8_t ret;
-  ret = rte_rand() & 3;
-  if(ret == node_id){
-    ret = (++ret)&3;
-  }
-  return ret;
-  //return info->node_id;
+  info->expire = now;
+  return info->node_id;
 }
