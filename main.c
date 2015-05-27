@@ -119,12 +119,12 @@ static void print_stats(void) {
       */
     }
     if(node_id == portid){
-      printf("out->%d:%lu\n", node_id, newstat.ipackets);
-      printf("%d->out:%lu\n", node_id, newstat.opackets);
+      printf("out->%d:%lu\n", node_id, newstat.ibytes);
+      printf("%d->out:%lu\n", node_id, newstat.obytes);
       //printf(" out-> OUTPUT %lu pps\n",  newstat.opackets);
     }else{
-      printf("%d->%d:%lu\n",portid,node_id, newstat.ipackets);
-      printf("%d->%d:%lu\n",node_id,portid, newstat.opackets);
+      printf("%d->%d:%lu\n",portid,node_id, newstat.ibytes);
+      printf("%d->%d:%lu\n",node_id,portid, newstat.obytes);
       //printf("INTERNAL TO NODE[%d]  %lu pps\n", portid, newstat.opackets);
     }
 	fflush(stdout);
